@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2042
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Vulkan_Particles", "Vulkan\VulkanFirstProject.vcxproj", "{CC0A47B5-D28C-450A-9621-5686C095BD9D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DX11", "DX11\DX11.vcxproj", "{4F68206D-CD2B-47C2-9C58-C3D6378113B9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CC0A47B5-D28C-450A-9621-5686C095BD9D}.Debug|x64.ActiveCfg = Debug|x64
+		{CC0A47B5-D28C-450A-9621-5686C095BD9D}.Debug|x64.Build.0 = Debug|x64
+		{CC0A47B5-D28C-450A-9621-5686C095BD9D}.Release|x64.ActiveCfg = Release|x64
+		{CC0A47B5-D28C-450A-9621-5686C095BD9D}.Release|x64.Build.0 = Release|x64
+		{4F68206D-CD2B-47C2-9C58-C3D6378113B9}.Debug|x64.ActiveCfg = Debug|x64
+		{4F68206D-CD2B-47C2-9C58-C3D6378113B9}.Debug|x64.Build.0 = Debug|x64
+		{4F68206D-CD2B-47C2-9C58-C3D6378113B9}.Release|x64.ActiveCfg = Release|x64
+		{4F68206D-CD2B-47C2-9C58-C3D6378113B9}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {23EC111E-1C8B-423D-BD7C-84842E5C9A5D}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,200 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Effects">
+      <UniqueIdentifier>{b6a377f5-d418-400e-9d91-b1a2259f013f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Emitters">
+      <UniqueIdentifier>{d20f7ee5-e354-4153-be0c-9128aa32a366}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Emitters\EmittersTypes">
+      <UniqueIdentifier>{17cdf339-e543-4205-904f-f0d2f17b0dbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GObjects">
+      <UniqueIdentifier>{5810727b-9792-4cc1-a875-a8a420c9c8f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Main">
+      <UniqueIdentifier>{19a0ef64-1092-495c-83c9-96d31b6f1ccd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Main\DxRenderer">
+      <UniqueIdentifier>{46d40c09-3045-4ad4-880c-a4cdf8d51dce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{2d8e71f9-6e02-4f22-acf2-64faed8e24cf}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="explosionInterface.cpp">
+      <Filter>Emitters</Filter>
+    </ClCompile>
+    <ClCompile Include="emitterInterface.cpp">
+      <Filter>Emitters</Filter>
+    </ClCompile>
+    <ClCompile Include="explosion1.cpp">
+      <Filter>Emitters</Filter>
+    </ClCompile>
+    <ClCompile Include="fireWorks.cpp">
+      <Filter>Emitters</Filter>
+    </ClCompile>
+    <ClCompile Include="emitterFlame.cpp">
+      <Filter>Emitters\EmittersTypes</Filter>
+    </ClCompile>
+    <ClCompile Include="emitterFlash.cpp">
+      <Filter>Emitters\EmittersTypes</Filter>
+    </ClCompile>
+    <ClCompile Include="emitterFrags.cpp">
+      <Filter>Emitters\EmittersTypes</Filter>
+    </ClCompile>
+    <ClCompile Include="emitterLightning.cpp">
+      <Filter>Emitters\EmittersTypes</Filter>
+    </ClCompile>
+    <ClCompile Include="emitterShockWave.cpp">
+      <Filter>Emitters\EmittersTypes</Filter>
+    </ClCompile>
+    <ClCompile Include="emitterSmoke.cpp">
+      <Filter>Emitters\EmittersTypes</Filter>
+    </ClCompile>
+    <ClCompile Include="emitterSpark.cpp">
+      <Filter>Emitters\EmittersTypes</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticObject.cpp">
+      <Filter>GObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="GPlainObj.cpp">
+      <Filter>GObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="DxCamera.cpp">
+      <Filter>Main\DxRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="DxRenderer.cpp">
+      <Filter>Main\DxRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleManager.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="pxManager.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="winMain.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="inputLayouts.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="InputsListener.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="particleTexManager.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="explosionInterface.h">
+      <Filter>Emitters</Filter>
+    </ClInclude>
+    <ClInclude Include="emitterInterface.h">
+      <Filter>Emitters</Filter>
+    </ClInclude>
+    <ClInclude Include="explosion1.h">
+      <Filter>Emitters</Filter>
+    </ClInclude>
+    <ClInclude Include="fireWorks.h">
+      <Filter>Emitters</Filter>
+    </ClInclude>
+    <ClInclude Include="emitterFlame.h">
+      <Filter>Emitters\EmittersTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="emitterFlash.h">
+      <Filter>Emitters\EmittersTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="emitterFrags.h">
+      <Filter>Emitters\EmittersTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="emitterLightning.h">
+      <Filter>Emitters\EmittersTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="emitterShockWave.h">
+      <Filter>Emitters\EmittersTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="emitterSmoke.h">
+      <Filter>Emitters\EmittersTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="emitterSpark.h">
+      <Filter>Emitters\EmittersTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="StaticObject.h">
+      <Filter>GObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="IGObject.h">
+      <Filter>GObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="GPlainObj.h">
+      <Filter>GObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="DxCamera.h">
+      <Filter>Main\DxRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="DxRenderer.h">
+      <Filter>Main\DxRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="ICamera.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleManager.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="pxManager.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="Debug.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="inputLayouts.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="InputsListener.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="mathHelper.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="particleTexManager.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Structs.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Effects\baseEffect.fx">
+      <Filter>Effects</Filter>
+    </FxCompile>
+    <FxCompile Include="Effects\Particles.fx">
+      <Filter>Effects</Filter>
+    </FxCompile>
+    <FxCompile Include="Effects\ParticleSort.fx">
+      <Filter>Effects</Filter>
+    </FxCompile>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{4F68206D-CD2B-47C2-9C58-C3D6378113B9}</ProjectGuid>
+    <RootNamespace>DX11</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ExecutablePath>$(DXSDK_DIR)Utilities\bin\x64;$(ExecutablePath)</ExecutablePath>
+    <IncludePath>$(IncludePath);$(DXSDK_DIR)Include;Externals\Include</IncludePath>
+    <LibraryPath>$(LibraryPath);$(DXSDK_DIR)Lib\x64;Externals\libs</LibraryPath>
+    <CustomBuildAfterTargets>Link</CustomBuildAfterTargets>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ExecutablePath>$(DXSDK_DIR)Utilities\bin\x64;$(ExecutablePath)</ExecutablePath>
+    <IncludePath>$(IncludePath);$(DXSDK_DIR)Include;Externals\Include</IncludePath>
+    <LibraryPath>$(LibraryPath);$(DXSDK_DIR)Lib\x64;Externals\libs</LibraryPath>
+    <LinkIncremental>false</LinkIncremental>
+    <CustomBuildAfterTargets>Link</CustomBuildAfterTargets>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>false</ConformanceMode>
+      <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>d3d11.lib;d3dx11d.lib;D3DCompiler.lib;dxerr.lib;dxgi.lib;dxguid.lib;d3dx/Effects11d.lib;PhysX/PhysX3CookingDEBUG_x64.lib;PhysX/PhysX3DEBUG_x64.lib;PhysX/PhysX3CommonDEBUG_x64.lib;PhysX/PhysX3ExtensionsDEBUG.lib;PhysX/PhysXVisualDebuggerSDKDEBUG.lib;PhysX/PhysX3CharacterKinematicDEBUG_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <CustomBuildStep>
+      <Command>copy /y $(ProjectDir)Externals\dll\debug_dll\*  $(OutDir)</Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>Copying external files</Message>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Outputs>nvToolsExt64_1.dll;PhysX3DEBUG_x64.dll;PhysX3CharacterKinematicDEBUG_x64.dll;PhysX3CommonDEBUG_x64.dll;PhysX3CookingDEBUG_x64.dll;%(Outputs)</Outputs>
+    </CustomBuildStep>
+    <FxCompile>
+      <ShaderModel>5.0</ShaderModel>
+    </FxCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>false</ConformanceMode>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>d3d11.lib;d3dx11.lib;D3DCompiler.lib;dxerr.lib;dxgi.lib;dxguid.lib;d3dx/Effects11.lib;PhysX/PhysX3Cooking_x64.lib;PhysX/PhysX3_x64.lib;PhysX/PhysX3Common_x64.lib;PhysX/PhysX3Extensions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <CustomBuildStep>
+      <Command>copy /y $(ProjectDir)Externals\dll\release_dll\*  $(OutDir)</Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>Copying external files</Message>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Outputs>nvToolsExt64_1.dll;PhysX3_x64.dll;PhysX3CharacterKinematic_x64.dll;PhysX3Common_x64.dll;PhysX3Cooking_x64.dll;%(Outputs)</Outputs>
+    </CustomBuildStep>
+    <FxCompile>
+      <ShaderModel>5.0</ShaderModel>
+    </FxCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Debug.cpp" />
+    <ClCompile Include="DxCamera.cpp" />
+    <ClCompile Include="DxRenderer.cpp" />
+    <ClCompile Include="emitterFlame.cpp" />
+    <ClCompile Include="emitterFlash.cpp" />
+    <ClCompile Include="emitterFrags.cpp" />
+    <ClCompile Include="emitterInterface.cpp" />
+    <ClCompile Include="emitterLightning.cpp" />
+    <ClCompile Include="emitterShockWave.cpp" />
+    <ClCompile Include="emitterSmoke.cpp" />
+    <ClCompile Include="emitterSpark.cpp" />
+    <ClCompile Include="Engine.cpp" />
+    <ClCompile Include="explosion1.cpp" />
+    <ClCompile Include="explosionInterface.cpp" />
+    <ClCompile Include="fireWorks.cpp" />
+    <ClCompile Include="GPlainObj.cpp" />
+    <ClCompile Include="inputLayouts.cpp" />
+    <ClCompile Include="InputsListener.cpp" />
+    <ClCompile Include="ParticleManager.cpp" />
+    <ClCompile Include="particleTexManager.cpp" />
+    <ClCompile Include="pxManager.cpp" />
+    <ClCompile Include="StaticObject.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="winMain.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Debug.h" />
+    <ClInclude Include="DxCamera.h" />
+    <ClInclude Include="DxRenderer.h" />
+    <ClInclude Include="emitterFlame.h" />
+    <ClInclude Include="emitterFlash.h" />
+    <ClInclude Include="emitterFrags.h" />
+    <ClInclude Include="emitterInterface.h" />
+    <ClInclude Include="emitterLightning.h" />
+    <ClInclude Include="emitterShockWave.h" />
+    <ClInclude Include="emitterSmoke.h" />
+    <ClInclude Include="emitterSpark.h" />
+    <ClInclude Include="Engine.h" />
+    <ClInclude Include="explosion1.h" />
+    <ClInclude Include="explosionInterface.h" />
+    <ClInclude Include="fireWorks.h" />
+    <ClInclude Include="GPlainObj.h" />
+    <ClInclude Include="ICamera.h" />
+    <ClInclude Include="IGObject.h" />
+    <ClInclude Include="inputLayouts.h" />
+    <ClInclude Include="InputsListener.h" />
+    <ClInclude Include="mathHelper.h" />
+    <ClInclude Include="ParticleManager.h" />
+    <ClInclude Include="particleTexManager.h" />
+    <ClInclude Include="pxManager.h" />
+    <ClInclude Include="StaticObject.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Structs.h" />
+    <ClInclude Include="Timer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Effects\baseEffect.fx">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Effect</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Effects\Particles.fx">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Effect</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Effects\ParticleSort.fx">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Effect</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

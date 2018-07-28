@@ -1,0 +1,2 @@
+Dla gradientu 8.8.8.8. ARGB 32 bpp | unsigned
+Dla textur volum i reszty DXT5 ARGB Interpolated Alpha
