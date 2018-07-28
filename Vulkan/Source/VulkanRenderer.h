@@ -1,5 +1,5 @@
 #pragma once
-#include "IGObject.h"
+#include "Objects/IGObject.h"
 
 class CTechniqueManager;
 

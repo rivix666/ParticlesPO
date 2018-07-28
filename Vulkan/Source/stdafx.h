@@ -44,6 +44,7 @@
 
 // Renderer defines
 #define OBJ_PER_TECHNIQUE 8
+#define PARTICLE_BUFF_SIZE 24576
 
 // Projection defines
 #define FOV 60.0f

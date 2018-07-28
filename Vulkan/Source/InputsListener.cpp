@@ -3,10 +3,10 @@
 
 // Objects/UniBuff debug
 #ifdef _DEBUG
-#include "GObjectControl.h"
-#include "TechniqueManager.h"
-#include "IGObject.h"
-#include "GBaseObject.h" 
+#include "Objects/IGObject.h"
+#include "Objects/GBaseObject.h" 
+#include "Objects/GObjectControl.h"
+#include "Techs/TechniqueManager.h"
 #endif
 
 void input::InitInputListeners(GLFWwindow* window)

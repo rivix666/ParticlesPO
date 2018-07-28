@@ -1,9 +1,7 @@
 #include "stdafx.h"
 #include "GObjectControl.h"
-#include "TechniqueManager.h"
 #include "IGObject.h"
-
-#include "GBaseObject.h" //#UNI_BUFF
+#include "../Techs/TechniqueManager.h"
 
 CGObjectControl::CGObjectControl(VkDevice device)
     : m_Device(device)

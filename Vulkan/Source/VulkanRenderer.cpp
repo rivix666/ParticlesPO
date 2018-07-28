@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "VulkanRenderer.h"
-#include "ShaderManager.h"
-#include "GBaseObject.h"
-#include "BaseTechnique.h"
-#include "TechniqueManager.h"
+#include "Objects/GBaseObject.h"
+#include "Techs/ShaderManager.h"
+#include "Techs/BaseTechnique.h"
+#include "Techs/TechniqueManager.h"
 
 #pragma optimize("", off)
 
@@ -1639,7 +1639,7 @@ bool CVulkanRenderer::InitTechniqueManager()
 
     m_TechMgr = new CTechniqueManager();
 
-    CGBaseObject::s_TechId = REGISTER_TECH(BaseVertex, new CBaseTechnique); //#TECH do poprawy
+    CGBaseObject::s_TechId = REGISTER_TECH(BaseVertex, new CBaseTechnique); //#TECH do poprawy, renderer nie powinien wiedziec o poszczegolnych technikach
 
     //#TECH porejestrowac tu techniki (albo gdzies indziej do przemyslenia)
     m_TechMgr->InitTechniques();

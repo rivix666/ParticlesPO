@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "GBaseObject.h"
-#include "BaseTechnique.h"
-#include "TechniqueManager.h"
+#include "../Techs/BaseTechnique.h"
+#include "../Techs/TechniqueManager.h"
 
 uint CGBaseObject::s_TechId = UINT_MAX;
 

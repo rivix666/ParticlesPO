@@ -147,6 +147,8 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ForcedIncludeFiles>
+      </ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -157,42 +159,51 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="InputsListener.h" />
-    <ClInclude Include="PxManager.h" />
-    <ClInclude Include="TechniqueManager.h" />
-    <ClInclude Include="GObjectControl.h" />
-    <ClInclude Include="Engine.h" />
-    <ClInclude Include="GBaseObject.h" />
-    <ClInclude Include="IGObject.h" />
-    <ClInclude Include="ITechnique.h" />
-    <ClInclude Include="ShaderManager.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="BaseTechnique.h" />
-    <ClInclude Include="Utils\Timer.h" />
-    <ClInclude Include="VulkanRenderer.h" />
+    <ClInclude Include="Source\Objects\stdafx.h" />
+    <ClInclude Include="Source\Particles\Emitters\IEmitter.h" />
+    <ClInclude Include="Source\Camera.h" />
+    <ClInclude Include="Source\InputsListener.h" />
+    <ClInclude Include="Source\Particles\Emitters\stdafx.h" />
+    <ClInclude Include="Source\Particles\ParticleManager.h" />
+    <ClInclude Include="Source\Particles\stdafx.h" />
+    <ClInclude Include="Source\PxManager.h" />
+    <ClInclude Include="Source\Techs\stdafx.h" />
+    <ClInclude Include="Source\Techs\TechniqueManager.h" />
+    <ClInclude Include="Source\Objects\GObjectControl.h" />
+    <ClInclude Include="Source\Engine.h" />
+    <ClInclude Include="Source\Objects\GBaseObject.h" />
+    <ClInclude Include="Source\Objects\IGObject.h" />
+    <ClInclude Include="Source\Techs\ITechnique.h" />
+    <ClInclude Include="Source\Techs\ShaderManager.h" />
+    <ClInclude Include="Source\stdafx.h" />
+    <ClInclude Include="Source\Techs\BaseTechnique.h" />
+    <ClInclude Include="Source\Utils\stdafx.h" />
+    <ClInclude Include="Source\Utils\Timer.h" />
+    <ClInclude Include="Source\VulkanRenderer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="InputsListener.cpp" />
-    <ClCompile Include="PxManager.cpp" />
-    <ClCompile Include="TechniqueManager.cpp" />
-    <ClCompile Include="GObjectControl.cpp" />
-    <ClCompile Include="Engine.cpp" />
-    <ClCompile Include="GBaseObject.cpp" />
-    <ClCompile Include="IGObject.cpp" />
-    <ClCompile Include="ITechnique.cpp" />
-    <ClCompile Include="ShaderManager.cpp" />
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="Source\Particles\Emitters\IEmitter.cpp" />
+    <ClCompile Include="Source\Camera.cpp" />
+    <ClCompile Include="Source\InputsListener.cpp" />
+    <ClCompile Include="Source\Particles\ParticleManager.cpp" />
+    <ClCompile Include="Source\PxManager.cpp" />
+    <ClCompile Include="Source\Techs\TechniqueManager.cpp" />
+    <ClCompile Include="Source\Objects\GObjectControl.cpp" />
+    <ClCompile Include="Source\Engine.cpp" />
+    <ClCompile Include="Source\Objects\GBaseObject.cpp" />
+    <ClCompile Include="Source\Objects\IGObject.cpp" />
+    <ClCompile Include="Source\Techs\ITechnique.cpp" />
+    <ClCompile Include="Source\Techs\ShaderManager.cpp" />
+    <ClCompile Include="Source\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="BaseTechnique.cpp" />
-    <ClCompile Include="Utils\Timer.cpp" />
-    <ClCompile Include="Vulkan_Particles.cpp" />
-    <ClCompile Include="VulkanRenderer.cpp" />
+    <ClCompile Include="Source\Techs\BaseTechnique.cpp" />
+    <ClCompile Include="Source\Utils\Timer.cpp" />
+    <ClCompile Include="Source\Vulkan_Particles.cpp" />
+    <ClCompile Include="Source\VulkanRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Effects\baseEffect.frag" />

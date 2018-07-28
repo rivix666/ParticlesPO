@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
 // #TMP
-#include "GBaseObject.h"
+#include "Objects/GBaseObject.h"
 
 #pragma optimize("")
 

@@ -2,7 +2,7 @@
 #include "Camera.h"
 #include "PxManager.h"
 #include "VulkanRenderer.h"
-#include "GObjectControl.h"
+#include "Objects/GObjectControl.h"
 #include "Utils/Timer.h"
 
 class CEngine
