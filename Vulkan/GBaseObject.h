@@ -6,6 +6,7 @@ enum class EBaseObjInitType
 {
     PLANE = 0,
     BOX,
+    USER_DEFINED,
 
     _COUNT_
 };
@@ -17,9 +18,12 @@ public:
     CGBaseObject(const EBaseObjInitType& type);
     CGBaseObject(const EBaseObjInitType& type, const SObjMtxInitParams& params);
     CGBaseObject(const std::vector<uint16_t>& indices, const std::vector<BaseVertex>& vertices, const SObjMtxInitParams& params);
-    ~CGBaseObject() = default;
+    ~CGBaseObject();
 
-    // Derived from IGObject
+    // Derived from IGObject   
+    bool     InitPhysXObj() override;
+    void     ShutdownPhysXObj() override;
+
     bool     CreateBuffers() override;
 
     size_t   GetVertexSize() const override;
@@ -42,8 +46,15 @@ protected:
     void CreateIndexBuffer();
 
 private:
+    // Buffers data
     SObjUniBuffer m_UniBuffData;
-
     std::vector<uint16_t> m_Indices;
     std::vector<BaseVertex> m_Vertices;
+
+    // PhysX
+    physx::PxRigidStatic* m_PxActor;
+    physx::PxMaterial* m_PxMaterial;
+
+    // Misc
+    EBaseObjInitType m_Type;
 };

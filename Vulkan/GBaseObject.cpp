@@ -6,6 +6,7 @@
 uint CGBaseObject::s_TechId = UINT_MAX;
 
 CGBaseObject::CGBaseObject(const EBaseObjInitType& type)
+    : m_Type(type)
 {
     m_TechId = s_TechId; //#TECH keipskie rozwiazanie ale na razie na szybko jest
     InitVectors(type);
@@ -13,6 +14,7 @@ CGBaseObject::CGBaseObject(const EBaseObjInitType& type)
 
 CGBaseObject::CGBaseObject(const EBaseObjInitType& type, const SObjMtxInitParams& params)
     : IGObject(params)
+    , m_Type(type)
 {
     m_TechId = s_TechId; //#TECH keipskie rozwiazanie ale na razie na szybko jest
     InitVectors(type);
@@ -22,8 +24,65 @@ CGBaseObject::CGBaseObject(const std::vector<uint16_t>& indices, const std::vect
     : IGObject(params)
     , m_Indices(indices)
     , m_Vertices(vertices)
+    , m_Type(EBaseObjInitType::USER_DEFINED)
 {
     m_TechId = s_TechId; //#TECH keipskie rozwiazanie ale na razie na szybko jest
+}
+
+CGBaseObject::~CGBaseObject()
+{
+    ShutdownPhysXObj();
+}
+
+bool CGBaseObject::InitPhysXObj()
+{
+    switch (m_Type)
+    {
+    case EBaseObjInitType::PLANE:
+    {
+        // #PX nie widac na PVD, sprawdzic czy dziala jak beda particle
+        m_PxMaterial = g_Engine->PxManager()->SDK()->createMaterial(1.0, 1.0, 0.0);
+
+        glm::vec3 pos(m_WorldMtx[3]);
+        physx::PxPlane plane(physx::PxVec3(0.0f, 0.1f, 0.0f), physx::PxVec3(0.0f, 1.0f, 0.0f));
+        m_PxActor = PxCreatePlane(*g_Engine->PxManager()->SDK(), plane, *m_PxMaterial);
+
+        physx::PxShape* planeShape = g_Engine->PxManager()->SDK()->createShape(physx::PxPlaneGeometry(), *m_PxMaterial);
+        planeShape->setLocalPose(physx::PxTransform(physx::PxVec3(pos.x, pos.y, pos.z)));
+        planeShape->setFlag(physx::PxShapeFlag::ePARTICLE_DRAIN, true);
+        m_PxActor->attachShape(*planeShape);
+
+        g_Engine->PxManager()->RegisterActor(m_PxActor);
+        return true;
+    }
+    case EBaseObjInitType::BOX:
+    {
+        m_PxMaterial = g_Engine->PxManager()->SDK()->createMaterial(1.0, 1.0, 0.0);
+
+        glm::vec3 pos(m_WorldMtx[3]);
+        physx::PxShape* shape = g_Engine->PxManager()->SDK()->createShape(physx::PxBoxGeometry(1.0f, 1.0f, 1.0f), *m_PxMaterial);
+        shape->setFlag(physx::PxShapeFlag::ePARTICLE_DRAIN, true);
+        
+        physx::PxTransform transform(physx::PxVec3(pos.x, pos.y, pos.z));
+        m_PxActor = physx::PxCreateStatic(*g_Engine->PxManager()->SDK(), transform, *shape);
+
+        g_Engine->PxManager()->RegisterActor(m_PxActor);
+        return true;
+    }
+    case EBaseObjInitType::USER_DEFINED:
+        return utils::FatalError(g_Engine->Hwnd(), "User defined px actors, were not implemented yet");
+    }
+
+    return false;
+}
+
+void CGBaseObject::ShutdownPhysXObj()
+{
+    g_Engine->PxManager()->UnregisterActor(m_PxActor);
+    m_PxActor->release();
+    m_PxActor = nullptr;
+    m_PxMaterial->release();
+    m_PxMaterial = nullptr;
 }
 
 bool CGBaseObject::CreateBuffers()

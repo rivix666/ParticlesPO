@@ -17,8 +17,12 @@ CEngine::~CEngine()
             m_ObjectControl->Shutdown();
             DELETE(m_ObjectControl);
         }
+
         m_Renderer->Shutdown();
         DELETE(m_Renderer);
+
+        m_PxMgr->Shutdown();
+        DELETE(m_PxMgr);
 
         SAFE_DELETE(m_Camera);
     }
@@ -35,8 +39,13 @@ bool CEngine::Init()
         if (!m_Renderer->Init())
             return false;
 
+        m_PxMgr = new CPxManager();
+        if (!m_PxMgr->Init())
+            return false;
+
         m_ObjectControl = new CGObjectControl(m_Renderer->GetDevice());
         m_Camera = new CCamera();
+
         return true;
     }
     return false;
@@ -62,4 +71,5 @@ void CEngine::UpdateScene()
 {
     m_Camera->Update();
     m_ObjectControl->UpdateUniBuffers();
+    m_PxMgr->SimulatePhysX();
 }

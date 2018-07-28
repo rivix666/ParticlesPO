@@ -105,11 +105,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>vulkan\vulkan-1.lib;glfw\glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan\vulkan-1.lib;glfw\glfw3.lib;PhysX/PhysX3CookingDEBUG_x64.lib;PhysX/PhysX3DEBUG_x64.lib;PhysX/PhysX3CommonDEBUG_x64.lib;PhysX/PhysX3ExtensionsDEBUG.lib;PhysX/PhysXVisualDebuggerSDKDEBUG.lib;PhysX/PhysX3CharacterKinematicDEBUG_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
       <Command>cd /D $(ProjectDir)Effects
@@ -152,12 +153,13 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>vulkan\vulkan-1.lib;glfw\glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan\vulkan-1.lib;glfw\glfw3.lib;PhysX/PhysX3Cooking_x64.lib;PhysX/PhysX3_x64.lib;PhysX/PhysX3Common_x64.lib;PhysX/PhysX3Extensions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="InputsListener.h" />
+    <ClInclude Include="PxManager.h" />
     <ClInclude Include="TechniqueManager.h" />
     <ClInclude Include="GObjectControl.h" />
     <ClInclude Include="Engine.h" />
@@ -173,6 +175,7 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="InputsListener.cpp" />
+    <ClCompile Include="PxManager.cpp" />
     <ClCompile Include="TechniqueManager.cpp" />
     <ClCompile Include="GObjectControl.cpp" />
     <ClCompile Include="Engine.cpp" />

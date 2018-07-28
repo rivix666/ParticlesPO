@@ -31,20 +31,7 @@ void CGObjectControl::Shutdown()
 
 void CGObjectControl::RegisterObject(IGObject* obj)
 {
-    if (!obj)
-        return;
-
-    if (m_TechToObjVec[obj->TechniqueId()].size() >= OBJ_PER_TECHNIQUE)
-    {
-        utils::FatalError(g_Engine->Hwnd(), "Can not register more objects");
-        return;
-    }
-
-    obj->CreateBuffers();
-    EnsureTechIdWillFit(obj->TechniqueId());
-
-    m_TechToObjVec[obj->TechniqueId()].push_back(obj);
-    m_SizeCacheVec[obj->TechniqueId()] += obj->GetVerticesSize();
+    RegisterObject(obj->TechniqueId(), obj);
 }
 
 void CGObjectControl::RegisterObject(const uint& tech, IGObject* obj)
@@ -63,6 +50,8 @@ void CGObjectControl::RegisterObject(const uint& tech, IGObject* obj)
 
     m_TechToObjVec[tech].push_back(obj);
     m_SizeCacheVec[tech] += obj->GetVerticesSize();
+
+    obj->InitPhysXObj();
 }
 
 void CGObjectControl::UnregisterObject(const uint& tech, IGObject* obj)
@@ -71,7 +60,19 @@ void CGObjectControl::UnregisterObject(const uint& tech, IGObject* obj)
         return;
 
     m_SizeCacheVec[tech] -= obj->GetVerticesSize();
-    std::remove_if(m_TechToObjVec[tech].begin(), m_TechToObjVec[tech].end(), [=](IGObject* o) { return o == obj; });
+    auto new_end = std::remove_if(m_TechToObjVec[tech].begin(), m_TechToObjVec[tech].end(), [=](IGObject* o) 
+    { 
+        return o == obj; 
+    });
+
+    m_TechToObjVec[tech].erase(new_end, m_TechToObjVec[tech].end());
+
+    obj->ShutdownPhysXObj();
+}
+
+void CGObjectControl::UnregisterObject(IGObject* obj)
+{
+    UnregisterObject(obj->TechniqueId(), obj);
 }
 
 void CGObjectControl::RecordCommandBuffer(VkCommandBuffer& cmd_buff)

@@ -60,6 +60,9 @@
     <ClInclude Include="InputsListener.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PxManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -102,6 +105,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Vulkan_Particles.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PxManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

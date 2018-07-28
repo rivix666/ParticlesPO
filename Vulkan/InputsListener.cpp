@@ -1,18 +1,13 @@
 #include "stdafx.h"
 #include "InputsListener.h"
 
-
-//#UNI_BUFF
-//////////////////////////////////////////////////////////////////////////
+// Objects/UniBuff debug
+#ifdef _DEBUG
 #include "GObjectControl.h"
 #include "TechniqueManager.h"
 #include "IGObject.h"
-
-#include "GBaseObject.h" //#UNI_BUFF
-//////////////////////////////////////////////////////////////////////////
-
-
-
+#include "GBaseObject.h" 
+#endif
 
 void input::InitInputListeners(GLFWwindow* window)
 {
@@ -36,8 +31,14 @@ void input::KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 
 void input::HandlePress(GLFWwindow* window, const int& key, const int& scancode, const int& action, const int& mods)
 {
+    // Objects/UniBuff debug
+#ifdef _DEBUG
+    static IGObject* debug_obj = nullptr;
+#endif
+
     switch (key)
     {
+    // Camera control
     case GLFW_KEY_W:
     {
         g_Engine->Camera()->MoveFreeCam(ECamMoveDir::FORWARD, true);
@@ -78,8 +79,9 @@ void input::HandlePress(GLFWwindow* window, const int& key, const int& scancode,
         g_Engine->Camera()->SetMoveSpeed(0.005f);
         break;
     }
-    // #UNI_BUFF DEBUG
-    //////////////////////////////////////////////////////////////////////////
+
+    // Objects/UniBuff debug
+#ifdef _DEBUG
     case GLFW_KEY_LEFT:
     {
         glm::vec3 cur_pos(0.0f);
@@ -108,7 +110,25 @@ void input::HandlePress(GLFWwindow* window, const int& key, const int& scancode,
         g_Engine->ObjectControl()->GetTech2ObjVec().front()[1]->Translate(cur_pos);
         break;
     }
-    //////////////////////////////////////////////////////////////////////////
+    case GLFW_KEY_INSERT:
+    {
+        if (debug_obj)
+        {
+            REGISTER_OBJ(debug_obj);
+            debug_obj = nullptr;
+        }
+        break;
+    }
+    case GLFW_KEY_DELETE:
+    {
+        if (!debug_obj)
+        {
+            debug_obj = g_Engine->ObjectControl()->GetTech2ObjVec().front()[1];
+            UNREGISTER_OBJ(debug_obj);
+        }
+        break;
+    }
+#endif // _DEBUG
     }
 }
 
