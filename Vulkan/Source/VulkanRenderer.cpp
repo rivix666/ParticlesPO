@@ -272,6 +272,11 @@ void CVulkanRenderer::PresentQueueWaitIdle()
 void CVulkanRenderer::RecreateCommandBuffer()
 {
     // #CMD_BUFF In the future think about vkResetCommandBuffer() method
+    for (auto& cmd_buff : m_CommandBuffers)
+    {
+        vkResetCommandBuffer(cmd_buff, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+    }
+
     vkFreeCommandBuffers(m_Device, m_CommandPool, static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
     CreateCommandBuffers();
 }
@@ -1544,7 +1549,7 @@ bool CVulkanRenderer::CreateCommandPool()
     VkCommandPoolCreateInfo poolInfo = {};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily;
-    poolInfo.flags = 0; // Optional
+    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT; // default: 0 // #RESET_CMD_BUFF
 
     if (VKRESULT(vkCreateCommandPool(m_Device, &poolInfo, nullptr, &m_CommandPool)))
         return utils::FatalError(g_Engine->Hwnd(), "Failed to create command pool");

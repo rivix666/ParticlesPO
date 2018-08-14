@@ -3,7 +3,7 @@
 // #TMP
 #include "Objects/GBaseObject.h"
 
-#pragma optimize("")
+//#pragma optimize("", off)
 
 GLFWwindow* window = nullptr;
 HWND hwnd = nullptr;
@@ -21,6 +21,8 @@ bool InitWindow()
         utils::FatalError(hwnd, "Application could not create window");
         return false;
     }
+
+    return true;
 }
 
 // Engine

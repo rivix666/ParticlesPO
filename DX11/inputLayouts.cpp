@@ -8,7 +8,7 @@ inputLayouts* inputLayouts::objectInstance;
 
 inputLayouts::inputLayouts()
 {
-    ZeroMemory(&LayoutsArr, __COUNT__ * sizeof(ID3D11InputLayout*)); // #CHECK czy nie czysci za duzo
+    ZeroMemory(&LayoutsArr, __COUNT__ * sizeof(ID3D11InputLayout*));
     ZeroMemory(&TechArr, __COUNT__ * sizeof(ID3DX11EffectTechnique*));
 }
 
