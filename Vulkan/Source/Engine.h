@@ -3,6 +3,7 @@
 #include "PxManager.h"
 #include "VulkanRenderer.h"
 #include "Objects/GObjectControl.h"
+#include "Particles/ParticleManager.h"
 #include "Utils/Timer.h"
 
 class CEngine
@@ -25,6 +26,7 @@ public:
     inline CGObjectControl* ObjectControl() const { return m_ObjectControl; }
     inline CPxManager* PxManager() const { return m_PxMgr; }
     inline VkDevice Device() const { return m_Renderer != nullptr ? m_Renderer->GetDevice() : nullptr; }
+    inline CParticleManager* ParticleMgr() const { return m_ParticleMgr; }
 
     inline CTimer& Timer() { return m_FrameTimer; }
     inline CCamera* Camera() const { return m_Camera; }
@@ -36,8 +38,9 @@ private:
     GLFWwindow* m_MainWnd = nullptr;
 
     // Systems Managers
-    CVulkanRenderer* m_Renderer = nullptr;
-    CGObjectControl* m_ObjectControl = nullptr;
+    CVulkanRenderer*  m_Renderer = nullptr;
+    CGObjectControl*  m_ObjectControl = nullptr;
+    CParticleManager* m_ParticleMgr = nullptr;
 
     // PhysX
     CPxManager* m_PxMgr = nullptr;

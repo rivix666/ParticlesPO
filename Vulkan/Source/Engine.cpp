@@ -18,6 +18,12 @@ CEngine::~CEngine()
             DELETE(m_ObjectControl);
         }
 
+        if (m_ParticleMgr)
+        {
+            m_ParticleMgr->Shutdown();
+            DELETE(m_ParticleMgr);
+        }
+
         m_Renderer->Shutdown();
         DELETE(m_Renderer);
 
@@ -41,6 +47,10 @@ bool CEngine::Init()
 
         m_PxMgr = new CPxManager();
         if (!m_PxMgr->Init())
+            return false;
+
+        m_ParticleMgr = new CParticleManager();
+        if (!m_ParticleMgr->Init())
             return false;
 
         m_ObjectControl = new CGObjectControl(m_Renderer->GetDevice());

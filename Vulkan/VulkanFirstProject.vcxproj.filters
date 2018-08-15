@@ -5,10 +5,6 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
@@ -19,70 +15,82 @@
     <Filter Include="Utils">
       <UniqueIdentifier>{9db7dcd1-1141-431c-a430-f793edb83932}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Particles">
+      <UniqueIdentifier>{be78aa53-02fd-40b4-a49e-313380d5ce2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Particles\Emitters">
+      <UniqueIdentifier>{8071db76-82f7-46af-b5d1-95cb8f524b57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Objects">
+      <UniqueIdentifier>{fef49c05-7d6d-4e22-bca5-5c5c7c623647}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Techs">
+      <UniqueIdentifier>{47740150-22c4-4536-b191-35d100e83180}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Utils\Timer.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Engine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\InputsListener.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\PxManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\VulkanRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Objects\GBaseObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Objects\GObjectControl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Objects\IGObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Techs\BaseTechnique.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Techs\ITechnique.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Techs\TechniqueManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Techs\ShaderManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Particles\ParticleManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Particles\Emitters\IEmitter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Objects\stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Particles\Emitters\stdafx.h">
-      <Filter>Header Files</Filter>
+      <Filter>Particles</Filter>
     </ClInclude>
     <ClInclude Include="Source\Particles\stdafx.h">
-      <Filter>Header Files</Filter>
+      <Filter>Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Particles\Emitters\IEmitter.h">
+      <Filter>Particles\Emitters</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Particles\Emitters\stdafx.h">
+      <Filter>Particles\Emitters</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Objects\GObjectControl.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Objects\IGObject.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Objects\GBaseObject.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Objects\stdafx.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Techs\BaseTechnique.h">
+      <Filter>Techs</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Techs\TechniqueManager.h">
+      <Filter>Techs</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Techs\ITechnique.h">
+      <Filter>Techs</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Techs\ShaderManager.h">
+      <Filter>Techs</Filter>
     </ClInclude>
     <ClInclude Include="Source\Techs\stdafx.h">
-      <Filter>Header Files</Filter>
+      <Filter>Techs</Filter>
     </ClInclude>
     <ClInclude Include="Source\Utils\stdafx.h">
-      <Filter>Header Files</Filter>
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\VulkanRenderer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Camera.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\InputsListener.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PxManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\stdafx.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -110,32 +118,32 @@
     <ClCompile Include="Source\VulkanRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Objects\GBaseObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Objects\GObjectControl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Objects\IGObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Techs\BaseTechnique.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Techs\ITechnique.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Techs\TechniqueManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Techs\ShaderManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Particles\ParticleManager.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Particles</Filter>
     </ClCompile>
     <ClCompile Include="Source\Particles\Emitters\IEmitter.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Particles\Emitters</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Objects\IGObject.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Objects\GObjectControl.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Objects\GBaseObject.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Techs\ITechnique.cpp">
+      <Filter>Techs</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Techs\BaseTechnique.cpp">
+      <Filter>Techs</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Techs\TechniqueManager.cpp">
+      <Filter>Techs</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Techs\ShaderManager.cpp">
+      <Filter>Techs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
