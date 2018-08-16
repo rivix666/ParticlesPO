@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "VulkanRenderer.h"
 #include "Objects/GBaseObject.h"
-#include "Techs/ShaderManager.h"
+#include "Techs/ShaderUtils.h"
 #include "Techs/BaseTechnique.h"
 #include "Techs/TechniqueManager.h"
 

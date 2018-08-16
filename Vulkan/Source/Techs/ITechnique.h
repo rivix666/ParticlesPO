@@ -1,5 +1,5 @@
 #pragma once
-#include "ShaderManager.h"
+#include "ShaderUtils.h"
 
 class CVulkanRenderer;
 
@@ -30,7 +30,7 @@ public:
 protected:
     // Pure virtual
     virtual void GetVertexInputDesc(VkPipelineVertexInputStateCreateInfo& vertexInputInfo) = 0;
-    virtual void GetShadersDesc(SShaderMgrParams& params) = 0;
+    virtual void GetShadersDesc(SShaderParams& params) = 0;
 
     // Get Pipeline description
     virtual void GetInputAssemblyDesc(VkPipelineInputAssemblyStateCreateInfo& inputAssembly);

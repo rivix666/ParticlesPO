@@ -174,7 +174,7 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     <ClInclude Include="Source\Objects\GBaseObject.h" />
     <ClInclude Include="Source\Objects\IGObject.h" />
     <ClInclude Include="Source\Techs\ITechnique.h" />
-    <ClInclude Include="Source\Techs\ShaderManager.h" />
+    <ClInclude Include="Source\Techs\ShaderUtils.h" />
     <ClInclude Include="Source\stdafx.h" />
     <ClInclude Include="Source\Techs\BaseTechnique.h" />
     <ClInclude Include="Source\Utils\stdafx.h" />
@@ -193,7 +193,7 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     <ClCompile Include="Source\Objects\GBaseObject.cpp" />
     <ClCompile Include="Source\Objects\IGObject.cpp" />
     <ClCompile Include="Source\Techs\ITechnique.cpp" />
-    <ClCompile Include="Source\Techs\ShaderManager.cpp" />
+    <ClCompile Include="Source\Techs\ShaderUtils.cpp" />
     <ClCompile Include="Source\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -206,8 +206,11 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     <ClCompile Include="Source\VulkanRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Effects\baseEffect.frag" />
     <None Include="Effects\baseEffect.vert" />
+    <None Include="Effects\compile.bat" />
+    <None Include="Effects\glslangValidator.exe" />
+    <None Include="Effects\source\baseEffect.frag" />
+    <None Include="Effects\source\baseEffect.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

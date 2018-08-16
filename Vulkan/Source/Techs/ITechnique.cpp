@@ -34,9 +34,9 @@ bool ITechnique::Shutdown()
 bool ITechnique::CreateGraphicsPipeline()
 {
     // Shaders
-    SShaderMgrParams shaders_params;
+    SShaderParams shaders_params;
     GetShadersDesc(shaders_params);
-    CShaderManager shadersMgr(shaders_params);
+    CShaderUtils shadersMgr(shaders_params);
 
     // Vertex input
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};

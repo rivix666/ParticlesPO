@@ -1,34 +1,41 @@
 #include "stdafx.h"
-#include "ShaderManager.h"
+#include "ShaderUtils.h"
 #include <fstream>
 
-CShaderManager::CShaderManager(const SShaderMgrParams& params)
+CShaderUtils::CShaderUtils(const SShaderParams& params)
 {
     Initialize(params);
 }
 
-CShaderManager::~CShaderManager()
+CShaderUtils::~CShaderUtils()
 {
     if (m_FragShaderModule)
         vkDestroyShaderModule(g_Engine->Renderer()->GetDevice(), m_FragShaderModule, nullptr);
+    if (m_GeomShaderModule)
+        vkDestroyShaderModule(g_Engine->Renderer()->GetDevice(), m_GeomShaderModule, nullptr);
     if (m_VertShaderModule)
         vkDestroyShaderModule(g_Engine->Renderer()->GetDevice(), m_VertShaderModule, nullptr);
 }
 
-void CShaderManager::Initialize(const SShaderMgrParams& params)
+void CShaderUtils::Initialize(const SShaderParams& params)
 {
     std::vector<char> vertShaderCode;
+    std::vector<char> geomShaderCode;
     std::vector<char> fragShaderCode;
 
     // Read shader files
     if (!params.vertex_shader_path.empty())
         ReadFile(params.vertex_shader_path.c_str(), vertShaderCode);
+    if (!params.geometry_shader_path.empty())
+        ReadFile(params.geometry_shader_path.c_str(), geomShaderCode);
     if (!params.fragment_shader_path.empty())
         ReadFile(params.fragment_shader_path.c_str(), fragShaderCode);
 
     // Create shader modules
     if (!m_VertShaderModule && !vertShaderCode.empty())
         m_VertShaderModule = CreateShaderModule(vertShaderCode);
+    if (!m_GeomShaderModule && !vertShaderCode.empty())
+        m_GeomShaderModule = CreateShaderModule(geomShaderCode);
     if (!m_FragShaderModule && !fragShaderCode.empty())
         m_FragShaderModule = CreateShaderModule(fragShaderCode);
 
@@ -43,6 +50,16 @@ void CShaderManager::Initialize(const SShaderMgrParams& params)
         m_ShaderStageInfo.push_back(vertShaderStageInfo);
     }
 
+    if (m_GeomShaderModule)
+    {
+        VkPipelineShaderStageCreateInfo geomShaderStageInfo = {};
+        geomShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        geomShaderStageInfo.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
+        geomShaderStageInfo.module = m_GeomShaderModule;
+        geomShaderStageInfo.pName = params.geometry_entry.c_str(); // we can use multiple entry functions and have multiple shaders in one file
+        m_ShaderStageInfo.push_back(geomShaderStageInfo);
+    }
+
     if (m_FragShaderModule)
     {
         VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
@@ -54,7 +71,7 @@ void CShaderManager::Initialize(const SShaderMgrParams& params)
     }
 }
 
-VkShaderModule CShaderManager::CreateShaderModule(const std::vector<char>& code)
+VkShaderModule CShaderUtils::CreateShaderModule(const std::vector<char>& code)
 {
     VkShaderModuleCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -68,7 +85,7 @@ VkShaderModule CShaderManager::CreateShaderModule(const std::vector<char>& code)
     return shaderModule;
 }
 
-bool CShaderManager::ReadFile(const char* filename, std::vector<char>& out)
+bool CShaderUtils::ReadFile(const char* filename, std::vector<char>& out)
 {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#define REGISTER_EMITTER(emitter, class_name, id) { }
+#define REGISTER_EMITTER(emitter, class_name, id) { g_Engine->ParticleMgr()->RegisterEmitter(emitter, #class_name, id) }
 
 class IEmitter;
 
@@ -32,6 +32,6 @@ public:
 
 private:
     TEmiVec     m_Emitters;
-    TEmiChrMap  m_EmittersIdMap;
+    TEmiChrMap  m_EmittersIdMap; // #PARTICLES potrzebne??
 };
 

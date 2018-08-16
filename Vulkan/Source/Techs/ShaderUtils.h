@@ -1,27 +1,29 @@
 #pragma once
 
-struct SShaderMgrParams
+struct SShaderParams
 {
     // Paths
     std::string vertex_shader_path;
+    std::string geometry_shader_path;
     std::string fragment_shader_path;
 
     // Entry function name
     std::string vertex_entry;
+    std::string geometry_entry;
     std::string fragment_entry;
 };
 
-class CShaderManager
+class CShaderUtils
 {
 public:
-    CShaderManager() = default;
-    CShaderManager(const SShaderMgrParams& params);
-    ~CShaderManager();
+    CShaderUtils() = default;
+    CShaderUtils(const SShaderParams& params);
+    ~CShaderUtils();
 
     typedef std::vector<VkPipelineShaderStageCreateInfo> TStageInfoVec;
 
     // Init
-    void Initialize(const SShaderMgrParams& params);
+    void Initialize(const SShaderParams& params);
 
     // Getters
     const TStageInfoVec& GetShaderStageInfoVec() const { return m_ShaderStageInfo; }
@@ -33,8 +35,9 @@ public:
     VkShaderModule CreateShaderModule(const std::vector<char>& code);
 
     // Shader Modules
-    VkShaderModule m_VertShaderModule = nullptr;
-    VkShaderModule m_FragShaderModule = nullptr;
+    VkShaderModule m_VertShaderModule  = nullptr;
+    VkShaderModule m_GeomShaderModule = nullptr;
+    VkShaderModule m_FragShaderModule  = nullptr;
 
     TStageInfoVec m_ShaderStageInfo;
 };

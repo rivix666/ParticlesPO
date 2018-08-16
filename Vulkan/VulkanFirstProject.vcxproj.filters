@@ -65,9 +65,6 @@
     <ClInclude Include="Source\Techs\ITechnique.h">
       <Filter>Techs</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Techs\ShaderManager.h">
-      <Filter>Techs</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Techs\stdafx.h">
       <Filter>Techs</Filter>
     </ClInclude>
@@ -91,6 +88,9 @@
     </ClInclude>
     <ClInclude Include="Source\stdafx.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Techs\ShaderUtils.h">
+      <Filter>Techs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -142,16 +142,19 @@
     <ClCompile Include="Source\Techs\TechniqueManager.cpp">
       <Filter>Techs</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Techs\ShaderManager.cpp">
+    <ClCompile Include="Source\Techs\ShaderUtils.cpp">
       <Filter>Techs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Effects\baseEffect.frag">
-      <Filter>Effects</Filter>
-    </None>
     <None Include="Effects\baseEffect.vert">
       <Filter>Effects</Filter>
     </None>
+    <None Include="Effects\source\baseEffect.frag" />
+    <None Include="Effects\source\baseEffect.vert" />
+    <None Include="Effects\compile.bat">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Effects\glslangValidator.exe" />
   </ItemGroup>
 </Project>

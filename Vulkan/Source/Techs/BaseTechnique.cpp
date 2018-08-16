@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "BaseTechnique.h"
-#include "ShaderManager.h"
+#include "ShaderUtils.h"
 
 VkVertexInputBindingDescription BaseVertex::m_BindingDesc = {};
 std::array<VkVertexInputAttributeDescription, 2> BaseVertex::m_AttributeDesc = {};
@@ -74,10 +74,10 @@ void CBaseTechnique::GetVertexInputDesc(VkPipelineVertexInputStateCreateInfo& ve
     vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions->data();
 }
 
-void CBaseTechnique::GetShadersDesc(SShaderMgrParams& params)
+void CBaseTechnique::GetShadersDesc(SShaderParams& params)
 {
-    params.vertex_shader_path = "Effects/vert.spv";
-    params.fragment_shader_path = "Effects/frag.spv";
+    params.vertex_shader_path = "Effects/baseVert.spv";
+    params.fragment_shader_path = "Effects/baseFrag.spv";
     params.vertex_entry = "main";
     params.fragment_entry = "main";
 }

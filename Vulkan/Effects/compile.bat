@@ -1,2 +1,2 @@
-glslangValidator.exe -V baseEffect.frag
-glslangValidator.exe -V baseEffect.vert
+glslangValidator.exe -o baseFrag.spv -V ./source/baseEffect.frag
+glslangValidator.exe -o baseVert.spv -V ./source/baseEffect.vert

@@ -37,7 +37,7 @@ public:
 
 protected:
     void GetVertexInputDesc(VkPipelineVertexInputStateCreateInfo& vertexInputInfo) override;
-    void GetShadersDesc(SShaderMgrParams& params) override;
+    void GetShadersDesc(SShaderParams& params) override;
 
 private:
     VkBuffer m_BaseObjUniBuffer = nullptr;
