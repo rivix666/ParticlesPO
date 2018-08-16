@@ -34,7 +34,7 @@ void CShaderUtils::Initialize(const SShaderParams& params)
     // Create shader modules
     if (!m_VertShaderModule && !vertShaderCode.empty())
         m_VertShaderModule = CreateShaderModule(vertShaderCode);
-    if (!m_GeomShaderModule && !vertShaderCode.empty())
+    if (!m_GeomShaderModule && !geomShaderCode.empty())
         m_GeomShaderModule = CreateShaderModule(geomShaderCode);
     if (!m_FragShaderModule && !fragShaderCode.empty())
         m_FragShaderModule = CreateShaderModule(fragShaderCode);
