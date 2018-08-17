@@ -92,6 +92,16 @@ uint CTechniqueManager::TechniquesCount() const
     return m_Techniques.size();
 }
 
+// uint CTechniqueManager::GetTechIdByLayoutName(const std::string& lay_name) const
+// {
+//     auto it = m_LayToTech.find(lay_name);
+//     if (it != m_LayToTech.end())
+//     {
+//         return it->second;
+//     }
+//     return UINT_MAX;
+// }
+
 ITechnique* CTechniqueManager::GetTechnique(const uint& tech_id) const
 {
     return m_Techniques[tech_id];

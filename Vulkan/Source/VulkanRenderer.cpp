@@ -2,10 +2,7 @@
 #include "VulkanRenderer.h"
 #include "Objects/GBaseObject.h"
 #include "Techs/ShaderUtils.h"
-#include "Techs/BaseTechnique.h"
 #include "Techs/TechniqueManager.h"
-
-#pragma optimize("", off)
 
 //#IMAGES
 #define STB_IMAGE_IMPLEMENTATION
@@ -54,9 +51,6 @@ bool CVulkanRenderer::Init()
 
         // #UNI_BUFF
         if (!CreateDescriptorSetLayout())
-            return Shutdown();
-
-        if (!InitTechniqueManager()) // #TECH przemyslec czy to dobry pomysl bo po co w sumie rejestrowac jak i tak wszyskto powstanei w jednym miejscu, chyba ze rozwiazanie hybrydowe?
             return Shutdown();
 
         if (!CreateCommandPool())
@@ -113,7 +107,6 @@ bool CVulkanRenderer::Shutdown()
     // Shutdown SwapChain, pipeline, renderpass
     CleanupSwapChain();
 
-
     //#IMAGES
     if (m_TextureSampler)
         vkDestroySampler(m_Device, m_TextureSampler, nullptr);
@@ -138,13 +131,6 @@ bool CVulkanRenderer::Shutdown()
     if (m_DescriptorPool)
         vkDestroyDescriptorPool(m_Device, m_DescriptorPool, nullptr);
     //////////////////////////////////////////////////////////////////////////
-
-    // Shutdown Tech Mgr
-    if (m_TechMgr)
-    {
-        m_TechMgr->Shutdown();
-        DELETE(m_TechMgr);
-    }
 
 #ifdef _DEBUG
     DestroyDebugReportCallbackEXT(m_DebugCallback, nullptr);
@@ -600,7 +586,7 @@ void CVulkanRenderer::RecreateSwapChain()
     CreateSwapChain();
     CreateImageViews();
     CreateRenderPass();
-    m_TechMgr->InitTechniques(); // recreate graphics pipelines
+    g_Engine->TechMgr()->InitTechniques(); // recreate graphics pipelines
     CreateDepthResources();
     CreateFramebuffers();
     CreateCommandBuffers();
@@ -624,8 +610,8 @@ void CVulkanRenderer::CleanupSwapChain()
 
     vkFreeCommandBuffers(m_Device, m_CommandPool, static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
 
-    if (m_TechMgr)
-        m_TechMgr->ShutdownTechniques(); // shutdown graphics pipelines
+    if (g_Engine->TechMgr())
+        g_Engine->TechMgr()->ShutdownTechniques(); // shutdown graphics pipelines
 
     if (m_RenderPass)
         vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
@@ -661,7 +647,7 @@ bool CVulkanRenderer::CreateDescriptorSetLayout()
     uboLayoutBindingCam.descriptorCount = 1;
     uboLayoutBindingCam.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     uboLayoutBindingCam.pImmutableSamplers = nullptr;
-    uboLayoutBindingCam.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    uboLayoutBindingCam.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
 
     VkDescriptorSetLayoutBinding uboLayoutBindingObj = {};
     uboLayoutBindingObj.binding = 1;
@@ -698,9 +684,9 @@ bool CVulkanRenderer::CreateUniformBuffers()
     result = result && CreateBuffer(camBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_CamUniBuffer, m_CamUniBufferMemory);
 
     // Create techs uni buffs
-    for (int i = 0; i < m_TechMgr->TechniquesCount(); i++)
+    for (int i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
     {
-        auto tech = m_TechMgr->GetTechnique(i);
+        auto tech = g_Engine->TechMgr()->GetTechnique(i);
         if (!tech || tech->GetSingleUniBuffObjSize() == 0)
             continue;
 
@@ -745,8 +731,6 @@ bool CVulkanRenderer::CreateDescriptorSet() //tomek kaczo-dupka
     if (VKRESULT(vkAllocateDescriptorSets(m_Device, &allocInfo, &m_DescriptorSet)))
         return utils::FatalError(g_Engine->Hwnd(), "Failed to allocate descriptor set");
 
-
-
     // #UNI_BUFF Nie potrzeba
     VkPhysicalDeviceProperties props;
     vkGetPhysicalDeviceProperties(g_Engine->Renderer()->GetPhysicalDevice(), &props);
@@ -779,10 +763,10 @@ bool CVulkanRenderer::CreateDescriptorSet() //tomek kaczo-dupka
 
     // Techs buff desc
     std::vector<VkDescriptorBufferInfo> techBuffInfoVec;
-    techBuffInfoVec.reserve(m_TechMgr->TechniquesCount());
-    for (int i = 0; i < m_TechMgr->TechniquesCount(); i++)
+    techBuffInfoVec.reserve(g_Engine->TechMgr()->TechniquesCount());
+    for (int i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
     {
-        auto tech = m_TechMgr->GetTechnique(i);
+        auto tech = g_Engine->TechMgr()->GetTechnique(i);
         if (!tech || tech->GetSingleUniBuffObjSize() == 0)
             continue;
 
@@ -1633,21 +1617,6 @@ bool CVulkanRenderer::CreateSemaphores()
     if (VKRESULT(vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &m_ImageAvailableSemaphore)) ||
         VKRESULT(vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &m_RenderFinishedSemaphore)))
         return utils::FatalError(g_Engine->Hwnd(), "Failed to create semaphores");
-
-    return true;
-}
-
-bool CVulkanRenderer::InitTechniqueManager()
-{
-    if (m_TechMgr)
-        return true;
-
-    m_TechMgr = new CTechniqueManager();
-
-    CGBaseObject::s_TechId = REGISTER_TECH(BaseVertex, new CBaseTechnique); //#TECH do poprawy, renderer nie powinien wiedziec o poszczegolnych technikach
-
-    //#TECH porejestrowac tu techniki (albo gdzies indziej do przemyslenia)
-    m_TechMgr->InitTechniques();
 
     return true;
 }

@@ -1,8 +1,6 @@
 #pragma once
 #include "Objects/IGObject.h"
 
-class CTechniqueManager;
-
 class CVulkanRenderer
 {
 public:
@@ -20,7 +18,6 @@ public:
     VkDevice GetDevice() const { return m_Device; }
     VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
     VkRenderPass GetRenderPass() const { return m_RenderPass; }
-    CTechniqueManager* GetTechMgr() const { return m_TechMgr; }
     const VkExtent2D& GetSwapChainExtent() const { return m_SwapChainExtent; }
 
     // Uniform buffers
@@ -79,7 +76,6 @@ protected:
     bool CreateCommandPool();
     bool CreateCommandBuffers();
     bool CreateSemaphores();
-    bool InitTechniqueManager();
 
     // Extensions support
     bool CheckAvailableExtensions();
@@ -173,7 +169,6 @@ private:
 
     // Pipeline handle
     VkRenderPass        m_RenderPass = nullptr;
-    CTechniqueManager*  m_TechMgr = nullptr;
 
     // SwapChain handle
     VkSwapchainKHR      m_SwapChain = nullptr;

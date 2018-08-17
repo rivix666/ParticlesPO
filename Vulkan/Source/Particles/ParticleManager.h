@@ -1,6 +1,6 @@
 #pragma once
 
-#define REGISTER_EMITTER(emitter, class_name, id) { g_Engine->ParticleMgr()->RegisterEmitter(emitter, #class_name, id) }
+#define REGISTER_EMITTER(emitter, class_name, id) g_Engine->ParticleMgr()->RegisterEmitter(emitter, #class_name, id)
 
 class IEmitter;
 
@@ -17,6 +17,12 @@ public:
     // Simulation
     void Simulate();
 
+    // Update
+    void UpdateBuffers();
+
+    // Command buffer handle
+    void RecordCommandBuffer(VkCommandBuffer& cmd_buff);
+
     // Emitter Register
     int  RegisterEmitter(IEmitter* emitter, const char* name, int id = -1);
     void UnregisterEmitter(int id);
@@ -31,7 +37,12 @@ public:
     typedef std::map<IEmitter*, const char*> TEmiChrMap;
 
 private:
+    // Emitters
     TEmiVec     m_Emitters;
-    TEmiChrMap  m_EmittersIdMap; // #PARTICLES potrzebne??
+    TEmiChrMap  m_EmittersIdMap; // #PARTICLES potrzebne?? (napewno wyleci, zamaist tego mapa z emiterami per techniki)
+
+    // Buffers
+    VkBuffer m_VertexBuffer = nullptr;
+    VkDeviceMemory m_VertexBufferMemory = nullptr;
 };
 

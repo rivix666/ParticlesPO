@@ -46,7 +46,7 @@ public:
 
     // Matrix operations
     void Translate(const glm::vec3& pos) { m_WorldMtx = glm::translate(m_WorldMtx, pos); }
-    void Rotate(const float& angle , const glm::vec3& axes) { m_WorldMtx = glm::rotate(m_WorldMtx, angle, axes); }
+    void Rotate(const float& angle, const glm::vec3& axes) { m_WorldMtx = glm::rotate(m_WorldMtx, angle, axes); }
     void Scale(const glm::vec3& scale) { m_WorldMtx = glm::scale(m_WorldMtx, scale);}
 
     // Buffers getters

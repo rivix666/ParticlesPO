@@ -1,27 +1,76 @@
 #include "stdafx.h"
 #include "ParticleManager.h"
 #include "Emitters/IEmitter.h"
+#include "../Techs/TechniqueManager.h"
 
 CParticleManager::CParticleManager()
 {
 }
 
-
 CParticleManager::~CParticleManager()
 {
+    utils::DeletePtrVec(m_Emitters);
 }
 
 bool CParticleManager::Init()
 {
+    // Create Vertex Buffer
+    g_Engine->Renderer()->CreateBuffer(
+        PARTICLE_BUFF_SIZE * IEmitter::SingleParticleSize(), 
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+        m_VertexBuffer, 
+        m_VertexBufferMemory);
     return true;
 }
 
 bool CParticleManager::Shutdown()
 {
+    // Cleanup buffers
+    if (m_VertexBuffer)
+        vkDestroyBuffer(g_Engine->Device(), m_VertexBuffer, nullptr);
+
+    if (m_VertexBufferMemory)
+        vkFreeMemory(g_Engine->Device(), m_VertexBufferMemory, nullptr);
+
     return false;
 }
 
 void CParticleManager::Simulate()
+{
+    for (auto emit : m_Emitters)
+    {
+        emit->Simulate();
+    }
+}
+
+void CParticleManager::UpdateBuffers()
+{
+    // #PARTICLE_MGR
+    // stworzyc staging buffer do komunikacji z cpu i vertex poprawny w systemie. sprawdziæ czy lepiej stworzyc jeden staging z max size i aktualizowaæ czy mo¿e mniejsze na bie¿¹co
+
+    //     if (m_Vertices.empty())
+    //         return;
+    // 
+    //     VkDeviceSize bufferSize = GetVerticesSize();
+    // 
+    //     VkBuffer stagingBuffer;
+    //     VkDeviceMemory stagingBufferMemory;
+    //     g_Engine->Renderer()->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+    // 
+    //     void* data;
+    //     vkMapMemory(g_Engine->Device(), stagingBufferMemory, 0, bufferSize, 0, &data);
+    //     memcpy(data, GetVerticesPtr(), (size_t)bufferSize);
+    //     vkUnmapMemory(g_Engine->Device(), stagingBufferMemory);
+    // 
+    //     g_Engine->Renderer()->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_VertexBuffer, m_VertexBufferMemory);
+    //     g_Engine->Renderer()->CopyBuffer(stagingBuffer, m_VertexBuffer, bufferSize);
+    // 
+    //     vkDestroyBuffer(g_Engine->Device(), stagingBuffer, nullptr);
+    //     vkFreeMemory(g_Engine->Device(), stagingBufferMemory, nullptr);
+}
+
+void CParticleManager::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
 {
 
 }

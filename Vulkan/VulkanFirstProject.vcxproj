@@ -160,6 +160,7 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Source\Objects\stdafx.h" />
+    <ClInclude Include="Source\Particles\Emitters\BaseEmitter.h" />
     <ClInclude Include="Source\Particles\Emitters\IEmitter.h" />
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\InputsListener.h" />
@@ -167,6 +168,7 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     <ClInclude Include="Source\Particles\ParticleManager.h" />
     <ClInclude Include="Source\Particles\stdafx.h" />
     <ClInclude Include="Source\PxManager.h" />
+    <ClInclude Include="Source\Techs\ParticleBaseTechnique.h" />
     <ClInclude Include="Source\Techs\stdafx.h" />
     <ClInclude Include="Source\Techs\TechniqueManager.h" />
     <ClInclude Include="Source\Objects\GObjectControl.h" />
@@ -182,11 +184,13 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     <ClInclude Include="Source\VulkanRenderer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Particles\Emitters\BaseEmitter.cpp" />
     <ClCompile Include="Source\Particles\Emitters\IEmitter.cpp" />
     <ClCompile Include="Source\Camera.cpp" />
     <ClCompile Include="Source\InputsListener.cpp" />
     <ClCompile Include="Source\Particles\ParticleManager.cpp" />
     <ClCompile Include="Source\PxManager.cpp" />
+    <ClCompile Include="Source\Techs\ParticleBaseTechnique.cpp" />
     <ClCompile Include="Source\Techs\TechniqueManager.cpp" />
     <ClCompile Include="Source\Objects\GObjectControl.cpp" />
     <ClCompile Include="Source\Engine.cpp" />
@@ -211,6 +215,9 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     <None Include="Effects\glslangValidator.exe" />
     <None Include="Effects\source\baseEffect.frag" />
     <None Include="Effects\source\baseEffect.vert" />
+    <None Include="Effects\source\particleEffect.frag" />
+    <None Include="Effects\source\particleEffect.geom" />
+    <None Include="Effects\source\particleEffect.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

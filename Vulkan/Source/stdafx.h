@@ -89,6 +89,18 @@ extern CEngine* g_Engine;
 
 namespace utils
 {
+    // Pointers handle
+    template<typename T>
+    void DeletePtrVec(T& vec)
+    {
+        uint count = vec.size();
+        for (uint i = 0; i < count; i++)
+        {
+            SAFE_DELETE(vec[i]);
+        }
+        vec.clear();
+    }
+
     // Errors Management
     bool FatalError(HWND hwnd, LPCWSTR msg);
     bool FatalError(HWND hwnd, LPCSTR msg);

@@ -6,7 +6,7 @@
 CGObjectControl::CGObjectControl(VkDevice device)
     : m_Device(device)
 {
-    uint tech_count = g_Engine->Renderer()->GetTechMgr()->TechniquesCount();
+    uint tech_count = g_Engine->TechMgr()->TechniquesCount();
     m_TechToObjVec.resize(tech_count);
     m_SizeCacheVec.resize(tech_count);
 }
@@ -75,7 +75,7 @@ void CGObjectControl::UnregisterObject(IGObject* obj)
 
 void CGObjectControl::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
 {
-    auto tech_mgr = g_Engine->Renderer()->GetTechMgr();
+    auto tech_mgr = g_Engine->TechMgr();
     uint tech_count = m_TechToObjVec.size();
     for (uint i = 0; i < tech_count; i++)
     {
@@ -112,11 +112,6 @@ void CGObjectControl::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
     }
 }
 
-//#UNI_BUFF
-/*
-wyliczac vector offsetow od razu per technika i rejestracja obiektow, posprzatac wsio
-Good Luck
-*/
 void CGObjectControl::UpdateUniBuffers()
 {
     size_t minUboAlignment = g_Engine->Renderer()->MinUboAlignment();
@@ -125,8 +120,11 @@ void CGObjectControl::UpdateUniBuffers()
     for (uint tech_id = 0; tech_id < m_TechToObjVec.size(); tech_id++)
     {
         uint8_t* pData;
-        auto uni_buff_mem = g_Engine->Renderer()->GetTechMgr()->GetTechnique(tech_id)->BaseObjUniBufferMemory();
-        auto single_obj_size = g_Engine->Renderer()->GetTechMgr()->GetTechnique(tech_id)->GetSingleUniBuffObjSize();
+        auto uni_buff_mem = g_Engine->TechMgr()->GetTechnique(tech_id)->BaseObjUniBufferMemory();
+        auto single_obj_size = g_Engine->TechMgr()->GetTechnique(tech_id)->GetSingleUniBuffObjSize();
+        if (uni_buff_mem == nullptr || single_obj_size == 0)
+            continue;
+
         vkMapMemory(g_Engine->Device(), uni_buff_mem, 0, single_obj_size * m_TechToObjVec[tech_id].size(), 0, (void **)&pData);
         for (uint obj_id = 0; obj_id < m_TechToObjVec[tech_id].size(); obj_id++)
         {
@@ -143,7 +141,7 @@ void CGObjectControl::UpdateUniBuffers()
                 LogD(obj_id);
                 LogD("\n");
             }
-            pData += g_Engine->Renderer()->GetTechMgr()->GetTechnique(tech_id)->GetUniBuffObjOffset();
+            pData += g_Engine->TechMgr()->GetTechnique(tech_id)->GetUniBuffObjOffset();
         }
         vkUnmapMemory(g_Engine->Device(), uni_buff_mem);
     }

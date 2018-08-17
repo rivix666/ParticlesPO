@@ -2,7 +2,7 @@
 
 class ITechnique;
 
-#define REGISTER_TECH(lay_struct_name, tech) { g_Engine->Renderer()->GetTechMgr()->RegisterTechnique(#lay_struct_name, tech) }
+#define REGISTER_TECH(lay_struct_name, tech) g_Engine->TechMgr()->RegisterTechnique(#lay_struct_name, tech)
 
 class CTechniqueManager
 {
@@ -27,6 +27,7 @@ public:
 
     // Getters
     uint TechniquesCount() const;
+    //uint GetTechIdByLayoutName(const std::string& lay_name) const; // #TECH_UGH moze rejestrowac pod unikalna nazwa by moc fajnie wyciagac bo po co mi w sumie po typie
     ITechnique* GetTechnique(const uint& tech_id) const;
 
     // Recreate Techniques

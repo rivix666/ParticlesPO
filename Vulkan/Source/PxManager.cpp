@@ -30,7 +30,7 @@ bool CPxManager::Init()
 
 #ifdef _DEBUG
     if (!InitVisualDebuggerConnection())
-        utils::FatalError(g_Engine->Hwnd(), "Failed to connect to PhysX visual debugger");
+        utils::FatalError(nullptr, "Failed to connect to PhysX visual debugger");
 #endif
 
     return true;

@@ -6,6 +6,8 @@
 #include "Particles/ParticleManager.h"
 #include "Utils/Timer.h"
 
+class CTechniqueManager;
+
 class CEngine
 {
 public:
@@ -14,6 +16,7 @@ public:
 
     // Init
     bool Init();
+    bool RegisterTechniques();
 
     // Frame
     void Frame();
@@ -27,6 +30,7 @@ public:
     inline CPxManager* PxManager() const { return m_PxMgr; }
     inline VkDevice Device() const { return m_Renderer != nullptr ? m_Renderer->GetDevice() : nullptr; }
     inline CParticleManager* ParticleMgr() const { return m_ParticleMgr; }
+    CTechniqueManager* TechMgr() const { return m_TechMgr; }
 
     inline CTimer& Timer() { return m_FrameTimer; }
     inline CCamera* Camera() const { return m_Camera; }
@@ -38,9 +42,10 @@ private:
     GLFWwindow* m_MainWnd = nullptr;
 
     // Systems Managers
-    CVulkanRenderer*  m_Renderer = nullptr;
-    CGObjectControl*  m_ObjectControl = nullptr;
-    CParticleManager* m_ParticleMgr = nullptr;
+    CVulkanRenderer*    m_Renderer = nullptr;
+    CGObjectControl*    m_ObjectControl = nullptr;
+    CParticleManager*   m_ParticleMgr = nullptr;
+    CTechniqueManager*  m_TechMgr = nullptr;
 
     // PhysX
     CPxManager* m_PxMgr = nullptr;
