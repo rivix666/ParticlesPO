@@ -7,6 +7,19 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Vulkan_Particles", "Vulkan\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DX11", "DX11\DX11.vcxproj", "{4F68206D-CD2B-47C2-9C58-C3D6378113B9}"
 EndProject
+Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "MSIAfterburner", "C:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe", "{83FE163D-98C9-4AE1-9062-58FE5079E01E}"
+	ProjectSection(DebuggerProjectSystem) = preProject
+		PortSupplier = 00000000-0000-0000-0000-000000000000
+		Executable = C:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe
+		RemoteMachine = PAPA-SMERF
+		StartingDirectory = C:\Program Files (x86)\MSI Afterburner
+		Environment = Default
+		LaunchingEngine = 00000000-0000-0000-0000-000000000000
+		UseLegacyDebugEngines = No
+		LaunchSQLEngine = No
+		AttachLaunchAction = No
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +34,8 @@ Global
 		{4F68206D-CD2B-47C2-9C58-C3D6378113B9}.Debug|x64.Build.0 = Debug|x64
 		{4F68206D-CD2B-47C2-9C58-C3D6378113B9}.Release|x64.ActiveCfg = Release|x64
 		{4F68206D-CD2B-47C2-9C58-C3D6378113B9}.Release|x64.Build.0 = Release|x64
+		{83FE163D-98C9-4AE1-9062-58FE5079E01E}.Debug|x64.ActiveCfg = Release|x86
+		{83FE163D-98C9-4AE1-9062-58FE5079E01E}.Release|x64.ActiveCfg = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

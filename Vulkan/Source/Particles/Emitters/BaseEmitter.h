@@ -15,9 +15,11 @@ public:
 
     // Getters/Setters
     uint ParticlesCount() const override;
+    size_t ParticlesSize() const override;
+    void* ParticlesData() override;
 
 protected:
     uint m_BuffSize = 0;
     uint m_UsedParticles = 0;
-    std::vector<ParticleVertex*> m_Particles;
+    std::vector<ParticleVertex> m_Particles;
 };

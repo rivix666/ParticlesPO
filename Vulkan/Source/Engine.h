@@ -30,11 +30,15 @@ public:
     inline CPxManager* PxManager() const { return m_PxMgr; }
     inline VkDevice Device() const { return m_Renderer != nullptr ? m_Renderer->GetDevice() : nullptr; }
     inline CParticleManager* ParticleMgr() const { return m_ParticleMgr; }
-    CTechniqueManager* TechMgr() const { return m_TechMgr; }
-
-    inline CTimer& Timer() { return m_FrameTimer; }
+    inline CTechniqueManager* TechMgr() const { return m_TechMgr; }
     inline CCamera* Camera() const { return m_Camera; }
+
+    // Timer
+    inline CTimer& Timer() { return m_FrameTimer; }
     inline double LastFrameTime() const { return m_LastFrameTime; }
+
+    // Misc
+    void RecordCommandBuffer(VkCommandBuffer& cmd_buff);
 
 private:
     // Wnd

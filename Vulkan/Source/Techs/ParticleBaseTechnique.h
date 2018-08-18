@@ -6,7 +6,7 @@ struct ParticleVertex
 {
     ParticleVertex() = default;
 
-    glm::vec3 pos;
+    glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f);
 
     float life = 0.0f;
     // float burn, uint tech, float max_size, float frame
@@ -25,6 +25,7 @@ public:
     ~CParticleBaseTechnique();
 
 protected:
+    void GetInputAssemblyDesc(VkPipelineInputAssemblyStateCreateInfo& inputAssembly) override;
     void GetVertexInputDesc(VkPipelineVertexInputStateCreateInfo& vertexInputInfo) override;
     void GetShadersDesc(SShaderParams& params) override;
 };

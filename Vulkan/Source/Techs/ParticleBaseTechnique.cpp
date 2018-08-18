@@ -50,6 +50,13 @@ CParticleBaseTechnique::~CParticleBaseTechnique()
 {
 }
 
+void CParticleBaseTechnique::GetInputAssemblyDesc(VkPipelineInputAssemblyStateCreateInfo& inputAssembly)
+{
+    inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+    inputAssembly.primitiveRestartEnable = VK_FALSE;
+}
+
 void CParticleBaseTechnique::GetVertexInputDesc(VkPipelineVertexInputStateCreateInfo& vertexInputInfo)
 {
     auto bindingDescription = ParticleVertex::GetBindingDescription();

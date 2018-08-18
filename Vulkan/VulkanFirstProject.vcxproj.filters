@@ -92,6 +92,8 @@
     <ClInclude Include="Source\Techs\ShaderUtils.h">
       <Filter>Techs</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Particles\Emitters\BaseEmitter.h" />
+    <ClInclude Include="Source\Techs\ParticleBaseTechnique.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Utils\Timer.cpp">
@@ -145,6 +147,12 @@
     <ClCompile Include="Source\Techs\ShaderUtils.cpp">
       <Filter>Techs</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Particles\Emitters\BaseEmitter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Techs\ParticleBaseTechnique.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Effects\baseEffect.vert">
@@ -156,5 +164,8 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="Effects\glslangValidator.exe" />
+    <None Include="Effects\source\particleEffect.frag" />
+    <None Include="Effects\source\particleEffect.geom" />
+    <None Include="Effects\source\particleEffect.vert" />
   </ItemGroup>
 </Project>

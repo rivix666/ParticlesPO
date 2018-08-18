@@ -43,10 +43,10 @@ bool InitEngine()
 
 void RegisterBaseObjects()
 {
-    REGISTER_OBJ_TECH(0, new CGBaseObject(EBaseObjInitType::PLANE));
+    //REGISTER_OBJ_TECH(0, new CGBaseObject(EBaseObjInitType::PLANE));
     REGISTER_OBJ_TECH(0, new CGBaseObject(EBaseObjInitType::BOX, glm::vec3(0.0f, 4.0f, 0.0f)));
-    REGISTER_OBJ_TECH(0, new CGBaseObject(EBaseObjInitType::BOX, glm::vec3(-4.0f, 4.0f, 0.0f)));
-    REGISTER_OBJ_TECH(0, new CGBaseObject(EBaseObjInitType::BOX, glm::vec3(4.0f, 4.0f, 0.0f)));
+    //REGISTER_OBJ_TECH(0, new CGBaseObject(EBaseObjInitType::BOX, glm::vec3(-4.0f, 4.0f, 0.0f)));
+    //REGISTER_OBJ_TECH(0, new CGBaseObject(EBaseObjInitType::BOX, glm::vec3(4.0f, 4.0f, 0.0f)));
     g_Engine->Renderer()->RecreateCommandBuffer();
 }
 

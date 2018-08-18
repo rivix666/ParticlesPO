@@ -89,7 +89,7 @@ bool CEngine::Init()
 
         // #PARTICLES tymczasowe do testów
         auto em = new CBaseEmitter(1, 1000);
-        REGISTER_EMITTER(em, CBaseEmitter, -1);
+        REGISTER_EMITTER(em, -1);
         em->Emit(4);
 
         // Create Object control and camera
@@ -133,4 +133,18 @@ void CEngine::UpdateScene()
     m_Camera->Update();
     m_ObjectControl->UpdateUniBuffers();
     m_PxMgr->SimulatePhysX();
+    m_ParticleMgr->Simulate();
+    m_ParticleMgr->UpdateBuffers();
+
+    //#PARTICLES only temporary for tests
+    g_Engine->Renderer()->RecreateCommandBuffer();
+
+}
+
+void CEngine::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
+{
+    if (m_ObjectControl)
+        m_ObjectControl->RecordCommandBuffer(cmd_buff);
+    if (m_ParticleMgr)
+        m_ParticleMgr->RecordCommandBuffer(cmd_buff);
 }

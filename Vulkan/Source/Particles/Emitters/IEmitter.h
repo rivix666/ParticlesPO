@@ -14,13 +14,15 @@ public:
 
     // Getters/Setters
     virtual uint ParticlesCount() const = 0;
+    virtual size_t ParticlesSize() const = 0;
+    virtual void* ParticlesData() = 0;
+
+    static size_t SingleParticleSize() { return sizeof(ParticleVertex); }
 
     const glm::vec3& Pos() const { return m_Pos; }
     void SetPos(const glm::vec3& pos) { m_Pos = pos; }
 
     uint TechId() const { return m_TechId; }
-
-    static size_t SingleParticleSize() { return sizeof(ParticleVertex); }
 
 protected:
     // Tech Id

@@ -86,6 +86,7 @@
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(IncludePath);$(ProjectDir);External\Include</IncludePath>
     <LibraryPath>$(LibraryPath);External\lib</LibraryPath>
+    <CustomBuildAfterTargets>Link</CustomBuildAfterTargets>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -114,7 +115,7 @@
     </Link>
     <CustomBuildStep>
       <Command>cd /D $(ProjectDir)Effects
-$(ProjectDir)Effects\compile.bat
+$(ProjectDir)Effects\compile_debug.bat
 mkdir  $(OutDir)Effects
 copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     </CustomBuildStep>
@@ -157,6 +158,14 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>vulkan\vulkan-1.lib;glfw\glfw3.lib;PhysX/PhysX3Cooking_x64.lib;PhysX/PhysX3_x64.lib;PhysX/PhysX3Common_x64.lib;PhysX/PhysX3Extensions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CustomBuildStep>
+      <Command>cd /D $(ProjectDir)Effects
+$(ProjectDir)Effects\compile.bat
+mkdir  $(OutDir)Effects
+copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
+      <Message>Building Shaders</Message>
+      <Outputs>.\Effects\*.spv</Outputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Source\Objects\stdafx.h" />

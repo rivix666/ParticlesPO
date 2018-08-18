@@ -1586,21 +1586,8 @@ bool CVulkanRenderer::CreateCommandBuffers()
 
         // Record
         vkCmdBeginRenderPass(m_CommandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-        if (g_Engine->ObjectControl()) //#CMD_BUFF to przemyslec ifa albo dac wyzej
-        g_Engine->ObjectControl()->RecordCommandBuffer(m_CommandBuffers[i]);
+        g_Engine->RecordCommandBuffer(m_CommandBuffers[i]);
         vkCmdEndRenderPass(m_CommandBuffers[i]);
-
-        // DEFAULT
-        //////////////////////////////////////////////////////////////////////////
-        // vkCmdBeginRenderPass(m_CommandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-        // vkCmdBindPipeline(m_CommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline);
-        //
-        // VkBuffer vertexBuffers[] = { m_VertexBuffer };
-        // VkDeviceSize offsets[] = { 0 };
-        // vkCmdBindVertexBuffers(m_CommandBuffers[i], 0, 1, vertexBuffers, offsets);
-        //
-        // vkCmdDraw(m_CommandBuffers[i], static_cast<uint32_t>(Vertices.size()), 1, 0, 0);
-        // vkCmdEndRenderPass(m_CommandBuffers[i]);
 
         if (VKRESULT(vkEndCommandBuffer(m_CommandBuffers[i])))
             return utils::FatalError(g_Engine->Hwnd(), "Failed to record command buffer");
