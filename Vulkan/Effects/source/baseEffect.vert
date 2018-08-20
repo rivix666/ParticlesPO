@@ -7,7 +7,7 @@ layout(binding = 0) uniform SCamUniBuffer
     mat4 proj;
 } cam_ubo;
 
-layout(binding = 1) uniform SObjUniBuffer
+layout(binding = 3) uniform SObjUniBuffer
 {
     mat4 obj_world;
     float tex_mul;

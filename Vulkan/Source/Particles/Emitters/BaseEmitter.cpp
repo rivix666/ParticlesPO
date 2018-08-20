@@ -27,7 +27,7 @@ void CBaseEmitter::Simulate()
 {
     for (uint i = 0; i < m_UsedParticles; i++)
     {
-        m_Particles[i].life -= 0.001f;
+        m_Particles[i].life -= 0.0001f;
         m_Particles[i].life = m_Particles[i].life < 0.0f ? 0.0f : m_Particles[i].life;
     }
 }

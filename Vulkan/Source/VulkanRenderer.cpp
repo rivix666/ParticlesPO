@@ -1,12 +1,8 @@
 #include "stdafx.h"
 #include "VulkanRenderer.h"
 #include "Objects/GBaseObject.h"
-#include "Techs/ShaderUtils.h"
 #include "Techs/TechniqueManager.h"
-
-//#IMAGES
-#define STB_IMAGE_IMPLEMENTATION
-#include <misc/stb_image.h>
+#include "Utils/ImageUtils.h"
 
 CVulkanRenderer::CVulkanRenderer(GLFWwindow* window)
     : m_Window(window)
@@ -63,21 +59,10 @@ bool CVulkanRenderer::Init()
         if (!CreateFramebuffers())
             return Shutdown();
 
-        //#IMAGES
-        if (!CreateTextureImage())
+        // #UNI_BUFF #IMAGES
+        if (!CreateTechsRenderObjects())
             return Shutdown();
 
-        if (!CreateTextureImageView())
-            return Shutdown();
-
-        if (!CreateTextureSampler())
-            return Shutdown();
-
-//         if (!CreateVertexBuffer()) // #TECH to samo z bufforami trzeba to przemyslec jeszcze
-//             return Shutdown();
-
-
-        // #UNI_BUFF
         if (!CreateUniformBuffers())
             return Shutdown();
 
@@ -107,16 +92,6 @@ bool CVulkanRenderer::Shutdown()
     // Shutdown SwapChain, pipeline, renderpass
     CleanupSwapChain();
 
-    //#IMAGES
-    if (m_TextureSampler)
-        vkDestroySampler(m_Device, m_TextureSampler, nullptr);
-    if (m_TextureImageView)
-        vkDestroyImageView(m_Device, m_TextureImageView, nullptr);
-    if (m_TextureImage)
-        vkDestroyImage(m_Device, m_TextureImage, nullptr);
-    if (m_TextureImageMemory)
-        vkFreeMemory(m_Device, m_TextureImageMemory, nullptr);
-
     //#UNI_BUFF
     //////////////////////////////////////////////////////////////////////////
     if (m_DescriptorSetLayout)
@@ -127,6 +102,8 @@ bool CVulkanRenderer::Shutdown()
 
     if (m_CamUniBufferMemory)
         vkFreeMemory(m_Device, m_CamUniBufferMemory, nullptr);
+
+    DestroyTechsRenderObjects();
 
     if (m_DescriptorPool)
         vkDestroyDescriptorPool(m_Device, m_DescriptorPool, nullptr);
@@ -250,6 +227,41 @@ void CVulkanRenderer::CopyBuffer(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDev
     EndSingleTimeCommands(commandBuffer);
 }
 
+VkCommandBuffer CVulkanRenderer::BeginSingleTimeCommands()
+{
+    VkCommandBufferAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandPool = m_CommandPool;
+    allocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer commandBuffer;
+    vkAllocateCommandBuffers(m_Device, &allocInfo, &commandBuffer);
+
+    VkCommandBufferBeginInfo beginInfo = {};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+    return commandBuffer;
+}
+
+void CVulkanRenderer::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
+{
+    vkEndCommandBuffer(commandBuffer);
+
+    VkSubmitInfo submitInfo = {};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+
+    vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(m_GraphicsQueue);
+
+    vkFreeCommandBuffers(m_Device, m_CommandPool, 1, &commandBuffer);
+}
+
 void CVulkanRenderer::PresentQueueWaitIdle()
 {
     vkQueueWaitIdle(m_PresentQueue);
@@ -264,6 +276,11 @@ void CVulkanRenderer::RecreateCommandBuffer()
 
     vkFreeCommandBuffers(m_Device, m_CommandPool, static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
     CreateCommandBuffers();
+}
+
+bool CVulkanRenderer::HasStencilComponent(VkFormat format)
+{
+    return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
 // Extensions
@@ -639,30 +656,58 @@ bool CVulkanRenderer::RecreateSwapChainIfNeeded(const VkResult& result, bool all
     return false;
 }
 
+// #DESC_SET dorobic manager do descriptor setów, oddzielny set jako main, oddzielny dla obiektów i oddzielny dla particli, ogólnie posprz¹taæ tu
 bool CVulkanRenderer::CreateDescriptorSetLayout()
 {
+    uint binding_offset = 0;
+    std::vector<VkDescriptorSetLayoutBinding> bindings;
+
+    // Cam uni buff layout
     VkDescriptorSetLayoutBinding uboLayoutBindingCam = {};
-    uboLayoutBindingCam.binding = 0;
-    uboLayoutBindingCam.descriptorCount = 1;
+    uboLayoutBindingCam.binding = binding_offset++;
+    uboLayoutBindingCam.descriptorCount = 1; // #DESC_SET bardzo wazne, mozna dzieki temu przekazywaæ np array obiektów danego typu, moze zamist volumetrycznej tekstury to to u¿yæ?
     uboLayoutBindingCam.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     uboLayoutBindingCam.pImmutableSamplers = nullptr;
     uboLayoutBindingCam.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
+    bindings.push_back(uboLayoutBindingCam);
 
-    VkDescriptorSetLayoutBinding uboLayoutBindingObj = {};
-    uboLayoutBindingObj.binding = 1;
-    uboLayoutBindingObj.descriptorCount = 1;
-    uboLayoutBindingObj.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC; //VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboLayoutBindingObj.pImmutableSamplers = nullptr;
-    uboLayoutBindingObj.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    // Image buff desc
+    for (int i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
+    {
+        auto tech = g_Engine->TechMgr()->GetTechnique(i);
+        if (!tech)
+            continue;
 
-    VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
-    samplerLayoutBinding.binding = 2;
-    samplerLayoutBinding.descriptorCount = 1;
-    samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    samplerLayoutBinding.pImmutableSamplers = nullptr;
-    samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        std::vector<ITechnique::TImgSampler> img_sampler_pairs;
+        tech->GetImageSamplerPairs(img_sampler_pairs);
+        for (const auto& p : img_sampler_pairs)
+        {
+            VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
+            samplerLayoutBinding.binding = binding_offset++;
+            samplerLayoutBinding.descriptorCount = 1;
+            samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            samplerLayoutBinding.pImmutableSamplers = nullptr;
+            samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            bindings.push_back(samplerLayoutBinding);
+        }
+    }
 
-    std::array<VkDescriptorSetLayoutBinding, 3> bindings = { uboLayoutBindingCam, uboLayoutBindingObj, samplerLayoutBinding };
+    // Techs buff desc
+    for (int i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
+    {
+        auto tech = g_Engine->TechMgr()->GetTechnique(i);
+        if (!tech || tech->GetSingleUniBuffObjSize() == 0)
+            continue;
+
+        VkDescriptorSetLayoutBinding uboLayoutBindingObj = {};
+        uboLayoutBindingObj.binding = binding_offset++;
+        uboLayoutBindingObj.descriptorCount = 1;
+        uboLayoutBindingObj.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC; //VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBindingObj.pImmutableSamplers = nullptr;
+        uboLayoutBindingObj.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        bindings.push_back(uboLayoutBindingObj);
+    }
+
     VkDescriptorSetLayoutCreateInfo layoutInfo = {};
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
@@ -674,36 +719,57 @@ bool CVulkanRenderer::CreateDescriptorSetLayout()
     return true;
 }
 
-bool CVulkanRenderer::CreateUniformBuffers()
+// #DESC_SET wszsytko zwi¹zane z desc set od przepisania
+bool CVulkanRenderer::CreateDescriptorPool()
 {
-    bool result = true;
 
-    // Create cam uni buff
-    VkDeviceSize camBufferSize = sizeof(SCamUniBuffer);
-    result = result && CreateBuffer(camBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_CamUniBuffer, m_CamUniBufferMemory);
+//     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+//     poolSizes[0].descriptorCount = 1;
+//     poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;//VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+//     poolSizes[1].descriptorCount = 1;
+//     poolSizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+//     poolSizes[2].descriptorCount = 1;
 
-    // Create techs uni buffs
+    // #DESC_SET wszsytko zwi¹zane z desc set od przepisania
+    //////////////////////////////////////////////////////////////////////////
+    std::vector<VkDescriptorPoolSize> poolSizes;
+
+    VkDescriptorPoolSize cam_ubo_pl;
+    cam_ubo_pl.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    cam_ubo_pl.descriptorCount = 1;
+    poolSizes.push_back(cam_ubo_pl);
+
+    // Image buff desc
+    for (int i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
+    {
+        auto tech = g_Engine->TechMgr()->GetTechnique(i);
+        if (!tech)
+            continue;
+
+        std::vector<ITechnique::TImgSampler> img_sampler_pairs;
+        tech->GetImageSamplerPairs(img_sampler_pairs);
+        for (const auto& p : img_sampler_pairs)
+        {
+            VkDescriptorPoolSize img_pl;
+            img_pl.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            img_pl.descriptorCount = 1;
+            poolSizes.push_back(img_pl);
+        }
+    }
+
+    // Techs buff desc
     for (int i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
     {
         auto tech = g_Engine->TechMgr()->GetTechnique(i);
         if (!tech || tech->GetSingleUniBuffObjSize() == 0)
             continue;
 
-        result = result && tech->CreateUniBuffers();
+        VkDescriptorPoolSize ubo_pl;
+        ubo_pl.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        ubo_pl.descriptorCount = 1;
+        poolSizes.push_back(ubo_pl);
     }
-
-    return result;
-}
-
-bool CVulkanRenderer::CreateDescriptorPool()
-{
-    std::array<VkDescriptorPoolSize, 3> poolSizes = {};
-    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = 1;
-    poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;//VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[1].descriptorCount = 1;
-    poolSizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[2].descriptorCount = 1;
+    //////////////////////////////////////////////////////////////////////////
 
     VkDescriptorPoolCreateInfo poolInfo = {};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -717,8 +783,8 @@ bool CVulkanRenderer::CreateDescriptorPool()
     return true;
 }
 
+// #DESC_SET dorobic manager do descriptor setów, oddzielny set jako main, oddzielny dla obiektów i oddzielny dla particli, ogólnie posprz¹taæ tu
 bool CVulkanRenderer::CreateDescriptorSet() //tomek kaczo-dupka
-
 {
     VkDescriptorSetLayout layouts[] = { m_DescriptorSetLayout };
     VkDescriptorSetAllocateInfo allocInfo = {};
@@ -755,10 +821,24 @@ bool CVulkanRenderer::CreateDescriptorSet() //tomek kaczo-dupka
     camBufferInfo.range = sizeof(SCamUniBuffer);
 
     // Image buff desc
-    VkDescriptorImageInfo imageInfo = {};
-    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    imageInfo.imageView = m_TextureImageView;
-    imageInfo.sampler = m_TextureSampler;
+    std::vector<VkDescriptorImageInfo> techImageInfo;
+    for (int i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
+    {
+        auto tech = g_Engine->TechMgr()->GetTechnique(i);
+        if (!tech)
+            continue;
+
+        std::vector<ITechnique::TImgSampler> img_sampler_pairs;
+        tech->GetImageSamplerPairs(img_sampler_pairs);
+        for (const auto& p : img_sampler_pairs)
+        {
+            VkDescriptorImageInfo imageInfo = {};
+            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo.imageView = p.first;
+            imageInfo.sampler = p.second;
+            techImageInfo.push_back(imageInfo);
+        }
+    }
 
     // Techs buff desc
     std::vector<VkDescriptorBufferInfo> techBuffInfoVec;
@@ -770,16 +850,14 @@ bool CVulkanRenderer::CreateDescriptorSet() //tomek kaczo-dupka
             continue;
 
         VkDescriptorBufferInfo objBufferInfo = {};
-        objBufferInfo.buffer = tech->BaseObjUniBuffer();
+        objBufferInfo.buffer = tech->UniBuffer();
         objBufferInfo.offset = 0;
         objBufferInfo.range = tech->GetSingleUniBuffObjSize();
         techBuffInfoVec.push_back(objBufferInfo);
     }
 
-    //#UNI_BUFF czy zadziala?
-    //std::array<VkWriteDescriptorSet, size> descriptorWrites = {};
     std::vector<VkWriteDescriptorSet> descriptorWrites;
-    descriptorWrites.resize(2 + techBuffInfoVec.size());
+    descriptorWrites.resize(1 + techImageInfo.size() + techBuffInfoVec.size());
     descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     descriptorWrites[0].dstSet = m_DescriptorSet;
     descriptorWrites[0].dstBinding = 0; //#UNI_BUFF bindings
@@ -788,408 +866,87 @@ bool CVulkanRenderer::CreateDescriptorSet() //tomek kaczo-dupka
     descriptorWrites[0].descriptorCount = 1;
     descriptorWrites[0].pBufferInfo = &camBufferInfo;
 
-    descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrites[1].dstSet = m_DescriptorSet;
-    descriptorWrites[1].dstBinding = 2;
-    descriptorWrites[1].dstArrayElement = 0;
-    descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    descriptorWrites[1].descriptorCount = 1;
-    descriptorWrites[1].pImageInfo = &imageInfo;
+    uint offset = 1;
+    for (int i = 0; i < techImageInfo.size(); i++)
+    {
+        descriptorWrites[i + offset].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[i + offset].dstSet = m_DescriptorSet;
+        descriptorWrites[i + offset].dstBinding = i + offset;
+        descriptorWrites[i + offset].dstArrayElement = 0;
+        descriptorWrites[i + offset].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[i + offset].descriptorCount = 1;
+        descriptorWrites[i + offset].pImageInfo = &techImageInfo[i];
+    }
+    offset += techImageInfo.size();
 
     for (int i = 0; i < techBuffInfoVec.size(); i++)
     {
-        descriptorWrites[i + 2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[i + 2].dstSet = m_DescriptorSet;
-        descriptorWrites[i + 2].dstBinding = 1;
-        descriptorWrites[i + 2].dstArrayElement = 0;
-        descriptorWrites[i + 2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;// VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrites[i + 2].descriptorCount = 1;
-        descriptorWrites[i + 2].pBufferInfo = &techBuffInfoVec[i];
+        descriptorWrites[i + offset].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[i + offset].dstSet = m_DescriptorSet;
+        descriptorWrites[i + offset].dstBinding = i + offset;
+        descriptorWrites[i + offset].dstArrayElement = 0;
+        descriptorWrites[i + offset].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;// VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[i + offset].descriptorCount = 1;
+        descriptorWrites[i + offset].pBufferInfo = &techBuffInfoVec[i];
     }
 
     vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     return true;
 }
 
-bool CVulkanRenderer::CreateTextureImage() //#IMAGES image mgr??
+bool CVulkanRenderer::CreateUniformBuffers()
 {
-    int texWidth, texHeight, texChannels;
-    stbi_uc* pixels = stbi_load("Images/Other/ground.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-    VkDeviceSize imageSize = texWidth * texHeight * 4;
-
-    if (!pixels) 
-        return utils::FatalError(g_Engine->Hwnd(), "Failed to load texture image");
-
-    //#MIPMAPS
-    m_MipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
-
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-    void* data;
-    vkMapMemory(m_Device, stagingBufferMemory, 0, imageSize, 0, &data);
-    memcpy(data, pixels, static_cast<size_t>(imageSize));
-    vkUnmapMemory(m_Device, stagingBufferMemory);
-
-    stbi_image_free(pixels);
-
-    CreateImage(texWidth, texHeight, m_MipLevels, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_TextureImage, m_TextureImageMemory);
-
-    TransitionImageLayout(m_TextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_MipLevels);
-    CopyBufferToImage(stagingBuffer, m_TextureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-    //transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps // #MIPMAPS
-
-    vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
-    vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
-
-    GenerateMipmaps(m_TextureImage, texWidth, texHeight, m_MipLevels);
-
+    // Create cam uni buff
+    VkDeviceSize camBufferSize = sizeof(SCamUniBuffer);
+    if (!CreateBuffer(camBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_CamUniBuffer, m_CamUniBufferMemory))
+        return false;
     return true;
 }
 
-bool CVulkanRenderer::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
+bool CVulkanRenderer::CreateTechsRenderObjects()
 {
-    VkImageCreateInfo imageInfo = {};
-    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    imageInfo.imageType = VK_IMAGE_TYPE_2D;
-    imageInfo.extent.width = width;
-    imageInfo.extent.height = height;
-    imageInfo.extent.depth = 1;
-    imageInfo.mipLevels = mipLevels;
-    imageInfo.arrayLayers = 1;
-    imageInfo.format = format;
-    imageInfo.tiling = tiling;
-    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    imageInfo.usage = usage;
-    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-    if (VKRESULT(vkCreateImage(m_Device, &imageInfo, nullptr, &image)))
-        return utils::FatalError(g_Engine->Hwnd(), "Failed to create image");
-    
-    VkMemoryRequirements memRequirements;
-    vkGetImageMemoryRequirements(m_Device, image, &memRequirements);
-
-    VkMemoryAllocateInfo allocInfo = {};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
-
-    if (VKRESULT(vkAllocateMemory(m_Device, &allocInfo, nullptr, &imageMemory)))
-        return utils::FatalError(g_Engine->Hwnd(), "Failed to allocate image memory");
-    
-    vkBindImageMemory(m_Device, image, imageMemory, 0);
-}
-
-void CVulkanRenderer::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels)
-{
-    VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
-
-    VkImageMemoryBarrier barrier = {};
-    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.oldLayout = oldLayout;
-    barrier.newLayout = newLayout;
-    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.image = image;
-
-    if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) 
+    // Create techs UniBuffs and Images
+    for (int i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
     {
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-        if (HasStencilComponent(format))
-            barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+        auto tech = g_Engine->TechMgr()->GetTechnique(i);
+        if (!tech)
+            continue;
+
+        if (!tech->CreateRenderObjects())
+            return false;
     }
-    else 
-    {
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    }
-
-    barrier.subresourceRange.baseMipLevel = 0;
-    barrier.subresourceRange.levelCount = mipLevels;
-    barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = 1;
-
-    VkPipelineStageFlags sourceStage;
-    VkPipelineStageFlags destinationStage;
-
-    if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) 
-    {
-        barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-        sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-        destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    }
-    else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) 
-    {
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-        sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    }
-    else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) 
-    {
-        barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-        sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-        destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    }
-    else
-    {
-        utils::FatalError(g_Engine->Hwnd(), "Unsupported layout transition");
-    }
-
-    vkCmdPipelineBarrier(
-        commandBuffer,
-        sourceStage, destinationStage,
-        0,
-        0, nullptr,
-        0, nullptr,
-        1, &barrier
-    );
-
-    EndSingleTimeCommands(commandBuffer);
-}
-
-void CVulkanRenderer::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
-{
-    VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
-
-    VkBufferImageCopy region = {};
-    region.bufferOffset = 0;
-    region.bufferRowLength = 0;
-    region.bufferImageHeight = 0;
-    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    region.imageSubresource.mipLevel = 0;
-    region.imageSubresource.baseArrayLayer = 0;
-    region.imageSubresource.layerCount = 1;
-    region.imageOffset = { 0, 0, 0 };
-    region.imageExtent = 
-    {
-        width,
-        height,
-        1
-    };
-
-    vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-
-    EndSingleTimeCommands(commandBuffer);
-}
-
-VkCommandBuffer CVulkanRenderer::BeginSingleTimeCommands()
-{
-    VkCommandBufferAllocateInfo allocInfo = {};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandPool = m_CommandPool;
-    allocInfo.commandBufferCount = 1;
-
-    VkCommandBuffer commandBuffer;
-    vkAllocateCommandBuffers(m_Device, &allocInfo, &commandBuffer);
-
-    VkCommandBufferBeginInfo beginInfo = {};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-    vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-    return commandBuffer;
-}
-
-void CVulkanRenderer::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
-{
-    vkEndCommandBuffer(commandBuffer);
-
-    VkSubmitInfo submitInfo = {};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffer;
-
-    vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-    vkQueueWaitIdle(m_GraphicsQueue);
-
-    vkFreeCommandBuffers(m_Device, m_CommandPool, 1, &commandBuffer);
-}
-
-bool CVulkanRenderer::CreateTextureImageView()
-{
-    m_TextureImageView = CreateImageView(m_TextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, m_MipLevels);
-    return m_TextureImageView != nullptr;
-}
-
-VkImageView CVulkanRenderer::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels)
-{
-    VkImageViewCreateInfo viewInfo = {};
-    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    viewInfo.image = image;
-    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    viewInfo.format = format;
-    viewInfo.subresourceRange.aspectMask = aspectFlags;
-    viewInfo.subresourceRange.baseMipLevel = 0;
-    viewInfo.subresourceRange.levelCount = mipLevels;
-    viewInfo.subresourceRange.baseArrayLayer = 0;
-    viewInfo.subresourceRange.layerCount = 1;
-
-    VkImageView imageView;
-    if (VKRESULT(vkCreateImageView(m_Device, &viewInfo, nullptr, &imageView)))
-    {
-        utils::FatalError(g_Engine->Hwnd(), "Failed to create texture image view");
-        return nullptr;
-    }
-
-    return imageView;
-}
-
-bool CVulkanRenderer::CreateTextureSampler()
-{
-    VkSamplerCreateInfo samplerInfo = {};
-    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    samplerInfo.magFilter = VK_FILTER_LINEAR;
-    samplerInfo.minFilter = VK_FILTER_LINEAR;
-    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.anisotropyEnable = VK_TRUE;
-    samplerInfo.maxAnisotropy = 16;
-    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-    samplerInfo.unnormalizedCoordinates = VK_FALSE;
-    samplerInfo.compareEnable = VK_FALSE;
-    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    samplerInfo.minLod = 0; // Optional
-    samplerInfo.maxLod = static_cast<float>(m_MipLevels);
-    samplerInfo.mipLodBias = 0; // Optional
-
-    if (VKRESULT(vkCreateSampler(m_Device, &samplerInfo, nullptr, &m_TextureSampler)))
-        return utils::FatalError(g_Engine->Hwnd(), "Failed to create texture sampler");
-
     return true;
 }
 
-void CVulkanRenderer::GenerateMipmaps(VkImage image, int32_t texWidth, int32_t texHeight, uint32_t mipLevels)
+void CVulkanRenderer::DestroyTechsRenderObjects()
 {
-    VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
-
-    VkImageMemoryBarrier barrier = {};
-    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.image = image;
-    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = 1;
-    barrier.subresourceRange.levelCount = 1;
-
-    int32_t mipWidth = texWidth;
-    int32_t mipHeight = texHeight;
-
-    for (uint32_t i = 1; i < mipLevels; i++) 
+    // Create techs UniBuffs and Images
+    for (int i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
     {
-        barrier.subresourceRange.baseMipLevel = i - 1;
-        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        auto tech = g_Engine->TechMgr()->GetTechnique(i);
+        if (!tech)
+            continue;
 
-        vkCmdPipelineBarrier(commandBuffer,
-            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier);
-
-        VkImageBlit blit = {};
-        blit.srcOffsets[0] = { 0, 0, 0 };
-        blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
-        blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        blit.srcSubresource.mipLevel = i - 1;
-        blit.srcSubresource.baseArrayLayer = 0;
-        blit.srcSubresource.layerCount = 1;
-        blit.dstOffsets[0] = { 0, 0, 0 };
-        blit.dstOffsets[1] = { mipWidth / 2, mipHeight / 2, 1 };
-        blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        blit.dstSubresource.mipLevel = i;
-        blit.dstSubresource.baseArrayLayer = 0;
-        blit.dstSubresource.layerCount = 1;
-
-        vkCmdBlitImage(commandBuffer,
-            image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-            image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            1, &blit,
-            VK_FILTER_LINEAR);
-
-        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-        vkCmdPipelineBarrier(commandBuffer,
-            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier);
-
-        if (mipWidth > 1) 
-            mipWidth /= 2;
-        if (mipHeight > 1) 
-            mipHeight /= 2;
+        tech->DestroyRenderObjects();
     }
-
-    barrier.subresourceRange.baseMipLevel = mipLevels - 1;
-    barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-    vkCmdPipelineBarrier(commandBuffer,
-        VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
-        0, nullptr,
-        0, nullptr,
-        1, &barrier);
-
-    EndSingleTimeCommands(commandBuffer);
 }
 
 bool CVulkanRenderer::CreateDepthResources()
 {
     VkFormat depthFormat = FindDepthFormat();
-    CreateImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_DepthImage, m_DepthImageMemory);
-    m_DepthImageView = CreateImageView(m_DepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
-    TransitionImageLayout(m_DepthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
+    CImageUtils::CreateImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_DepthImage, m_DepthImageMemory);
+    m_DepthImageView = CImageUtils::CreateImageView(m_DepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
+    CImageUtils::TransitionImageLayout(m_DepthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
     return true;
 }
 
 VkFormat CVulkanRenderer::FindDepthFormat()
 {
-    return FindSupportedFormat(
+    return CImageUtils::FindSupportedFormat(
         { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
         VK_IMAGE_TILING_OPTIMAL,
         VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
     );
-}
-
-VkFormat CVulkanRenderer::FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
-{
-    for (VkFormat format : candidates) 
-    {
-        VkFormatProperties props;
-        vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice, format, &props);
-
-        if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) 
-            return format;
-        else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features)
-            return format;
-    }
-
-    utils::FatalError(g_Engine->Hwnd(), "Failed to find supported format");
-    return VkFormat();
-}
-
-bool CVulkanRenderer::HasStencilComponent(VkFormat format)
-{
-    return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
 bool CVulkanRenderer::SubmitDrawCommands(const uint32_t& imageIndex, VkSubmitInfo& submitInfo)
@@ -1295,34 +1052,10 @@ bool CVulkanRenderer::CreateSwapChain()
 //////////////////////////////////////////////////////////////////////////
 bool CVulkanRenderer::CreateImageViews()
 {
-    //#IMAGES
-//     m_SwapChainImageViewsVec.resize(m_SwapChainImagesVec.size());
-//     for (size_t i = 0; i < m_SwapChainImagesVec.size(); i++)
-//     {
-//         VkImageViewCreateInfo createInfo = {};
-//         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-//         createInfo.image = m_SwapChainImagesVec[i];
-//         createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-//         createInfo.format = m_SwapChainImageFormat;
-//         createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-//         createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-//         createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-//         createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-//         createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-//         createInfo.subresourceRange.baseMipLevel = 0;
-//         createInfo.subresourceRange.levelCount = 1;
-//         createInfo.subresourceRange.baseArrayLayer = 0;
-//         createInfo.subresourceRange.layerCount = 1;
-// 
-//         if (VKRESULT(vkCreateImageView(m_Device, &createInfo, nullptr, &m_SwapChainImageViewsVec[i])))
-//             return utils::FatalError(g_Engine->GetHwnd(), L"Failed to create image views");
-//     }
-//     return true;
-
     m_SwapChainImageViewsVec.resize(m_SwapChainImagesVec.size());
     for (uint32_t i = 0; i < m_SwapChainImagesVec.size(); i++)
     {
-        m_SwapChainImageViewsVec[i] = CreateImageView(m_SwapChainImagesVec[i], m_SwapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+        m_SwapChainImageViewsVec[i] = CImageUtils::CreateImageView(m_SwapChainImagesVec[i], m_SwapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
         if (m_SwapChainImageViewsVec[i] == nullptr)
             return false;
     }

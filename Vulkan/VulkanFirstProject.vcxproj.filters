@@ -89,12 +89,12 @@
     <ClInclude Include="Source\stdafx.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Techs\ShaderUtils.h">
-      <Filter>Techs</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Particles\Emitters\BaseEmitter.h" />
     <ClInclude Include="Source\Techs\ParticleBaseTechnique.h" />
-    <ClInclude Include="ImageManager.h" />
+    <ClInclude Include="Source\Utils\ImageUtils.h" />
+    <ClInclude Include="Source\Utils\ShaderUtils.h">
+      <Filter>Techs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Utils\Timer.cpp">
@@ -145,17 +145,17 @@
     <ClCompile Include="Source\Techs\TechniqueManager.cpp">
       <Filter>Techs</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Techs\ShaderUtils.cpp">
-      <Filter>Techs</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Particles\Emitters\BaseEmitter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\Techs\ParticleBaseTechnique.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ImageManager.cpp">
+    <ClCompile Include="Source\Utils\ImageUtils.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Utils\ShaderUtils.cpp">
+      <Filter>Techs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

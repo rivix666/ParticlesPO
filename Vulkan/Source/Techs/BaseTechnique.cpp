@@ -1,61 +1,96 @@
 #include "stdafx.h"
 #include "BaseTechnique.h"
-#include "ShaderUtils.h"
+#include "../Utils/ImageUtils.h"
 
-VkVertexInputBindingDescription BaseVertex::m_BindingDesc = {};
-std::array<VkVertexInputAttributeDescription, 2> BaseVertex::m_AttributeDesc = {};
-
-VkVertexInputBindingDescription* BaseVertex::GetBindingDescription()
+void BaseVertex::GetBindingDescription(VkVertexInputBindingDescription& out_desc)
 {
-    static bool prepared = false; // #TECH_UGH...
-    if (!prepared)
+    out_desc.binding = 0;
+    out_desc.stride = sizeof(BaseVertex);
+    out_desc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+}
+
+void BaseVertex::GetAttributeDescriptions(std::vector<VkVertexInputAttributeDescription>& out_desc)
+{
+    // Pos
+    VkVertexInputAttributeDescription pos_desc = {};
+    pos_desc.binding = 0;
+    pos_desc.location = 0;
+    pos_desc.format = VK_FORMAT_R32G32B32_SFLOAT;
+    pos_desc.offset = offsetof(BaseVertex, pos);
+    out_desc.push_back(pos_desc);
+
+    // TexCoord
+    VkVertexInputAttributeDescription tex_coord_desc = {};
+    tex_coord_desc.binding = 0;
+    tex_coord_desc.location = 1;
+    tex_coord_desc.format = VK_FORMAT_R32G32_SFLOAT;
+    tex_coord_desc.offset = offsetof(BaseVertex, texCoord);
+    out_desc.push_back(tex_coord_desc);
+}
+
+//////////////////////////////////////////////////////////////////////////
+void CBaseTechnique::GetImageSamplerPairs(std::vector<TImgSampler>& out_pairs) const
+{
+    out_pairs.push_back(TImgSampler(m_TextureImageView, m_TextureSampler));
+}
+
+bool CBaseTechnique::CreateRenderObjects()
+{
+    if (!LoadImage())
+        return false;
+
+    if (!CreateImageView())
+        return false;
+
+    if (!CreateTextureSampler())
+        return false;
+
+    if (!CreateUniBuffer())
+        return false;
+
+    return true;
+}
+
+void CBaseTechnique::DestroyRenderObjects()
+{
+    // Destroy uni buffer
+    if (m_BaseObjUniBuffer)
     {
-        m_BindingDesc.binding = 0;
-        m_BindingDesc.stride = sizeof(BaseVertex);
-        m_BindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        prepared = true;
+        vkDestroyBuffer(g_Engine->Renderer()->GetDevice(), m_BaseObjUniBuffer, nullptr);
+        m_BaseObjUniBuffer = nullptr;
     }
-    return &m_BindingDesc;
-}
-
-std::array<VkVertexInputAttributeDescription, 2>* BaseVertex::GetAttributeDescriptions()
-{
-    static bool prepared = false; // #TECH_UGH... // moze szykowac je jak graphics pipeline czyli przychodza tutaj z gory
-    if (!prepared)
+    if (m_BaseObjUniBufferMemory)
     {
-        // Pos
-        m_AttributeDesc[0].binding = 0;
-        m_AttributeDesc[0].location = 0; //#INPUT_VERTEX_WAZNElokacje musza sie zgadzac z shaderem
-        m_AttributeDesc[0].format = VK_FORMAT_R32G32B32_SFLOAT; //#INPUT_VERTEX_WAZNE pamietaj o tym 
-        m_AttributeDesc[0].offset = offsetof(BaseVertex, pos);
-
-        // TexCoord
-        m_AttributeDesc[1].binding = 0;
-        m_AttributeDesc[1].location = 1;
-        m_AttributeDesc[1].format = VK_FORMAT_R32G32_SFLOAT;
-        m_AttributeDesc[1].offset = offsetof(BaseVertex, texCoord);
-
-        // Color
-        // m_AttributeDesc[2].binding = 0;
-        // m_AttributeDesc[2].location = 2;
-        // m_AttributeDesc[2].format = VK_FORMAT_R32G32B32_SFLOAT;
-        // m_AttributeDesc[2].offset = offsetof(BaseVertex, color);
-        prepared = true;
+        vkFreeMemory(g_Engine->Renderer()->GetDevice(), m_BaseObjUniBufferMemory, nullptr);
+        m_BaseObjUniBufferMemory = nullptr;
     }
-    return &m_AttributeDesc;
+
+    // Destroy Images
+    if (m_TextureImage)
+    {
+        vkDestroyImage(g_Engine->Renderer()->GetDevice(), m_TextureImage, nullptr);
+        m_TextureImage = nullptr;
+    }
+    if (m_TextureImageMemory)
+    {
+        vkFreeMemory(g_Engine->Renderer()->GetDevice(), m_TextureImageMemory, nullptr);
+        m_TextureImageMemory = nullptr;
+    }
+
+    // Destroy texture sampler and image view
+    if (m_TextureSampler)
+    {
+        vkDestroySampler(g_Engine->Renderer()->GetDevice(), m_TextureSampler, nullptr);
+        m_TextureSampler = nullptr;
+    }
+    if (m_TextureImageView)
+    {
+        vkDestroyImageView(g_Engine->Renderer()->GetDevice(), m_TextureImageView, nullptr);
+        m_TextureImageView = nullptr;
+    }
 }
 
-CBaseTechnique::CBaseTechnique()
-    : ITechnique()
-{
-
-}
-
-CBaseTechnique::~CBaseTechnique()
-{
-}
-
-bool CBaseTechnique::CreateUniBuffers()
+bool CBaseTechnique::CreateUniBuffer()
 {
     size_t minUboAlignment = g_Engine->Renderer()->MinUboAlignment();
     double size = ceil((double)GetSingleUniBuffObjSize() / (double)minUboAlignment);
@@ -63,15 +98,66 @@ bool CBaseTechnique::CreateUniBuffers()
     return g_Engine->Renderer()->CreateBuffer(baseObjBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_BaseObjUniBuffer, m_BaseObjUniBufferMemory);
 }
 
+bool CBaseTechnique::LoadImage()
+{
+    SImageParams params = { "Images/Other/ground.png", true };
+    CImageUtils img_utils(params);
+
+    m_TextureImage = img_utils.TextureImage();
+    m_TextureImageMemory = img_utils.TextureImageMemory();
+    m_MipLevels = img_utils.MipLevels();
+
+    if (!m_TextureImage || !m_TextureImageMemory)
+        return utils::FatalError(g_Engine->Hwnd(), "Failed to initialaze CBaseTechnique");
+
+    return true;
+}
+
+bool CBaseTechnique::CreateImageView()
+{
+    m_TextureImageView = CImageUtils::CreateImageView(m_TextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, m_MipLevels);
+    return m_TextureImageView != nullptr;
+}
+
+bool CBaseTechnique::CreateTextureSampler()
+{
+    VkSamplerCreateInfo samplerInfo = {};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_LINEAR;
+    samplerInfo.minFilter = VK_FILTER_LINEAR;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.anisotropyEnable = VK_TRUE;
+    samplerInfo.maxAnisotropy = 16;
+    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.minLod = 0; // Optional
+    samplerInfo.maxLod = static_cast<float>(m_MipLevels);
+    samplerInfo.mipLodBias = 0; // Optional
+
+    if (VKRESULT(vkCreateSampler(g_Engine->Renderer()->GetDevice(), &samplerInfo, nullptr, &m_TextureSampler)))
+        return utils::FatalError(g_Engine->Hwnd(), "Failed to create texture sampler");
+
+    return true;
+}
+
 void CBaseTechnique::GetVertexInputDesc(VkPipelineVertexInputStateCreateInfo& vertexInputInfo)
 {
-    auto bindingDescription = BaseVertex::GetBindingDescription();
-    auto attributeDescriptions = BaseVertex::GetAttributeDescriptions();
+    // Prepare descriptions
+    m_AttributesDesc.clear();
+    BaseVertex::GetBindingDescription(m_BindingDesc);
+    BaseVertex::GetAttributeDescriptions(m_AttributesDesc);
+
+    // Fill vertex input info
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertexInputInfo.vertexBindingDescriptionCount = 1;
-    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions->size());
-    vertexInputInfo.pVertexBindingDescriptions = bindingDescription;
-    vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions->data();
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(m_AttributesDesc.size());
+    vertexInputInfo.pVertexBindingDescriptions = &m_BindingDesc;
+    vertexInputInfo.pVertexAttributeDescriptions = m_AttributesDesc.data();
 }
 
 void CBaseTechnique::GetShadersDesc(SShaderParams& params)

@@ -19,7 +19,7 @@ public:
     IGObject(const SObjMtxInitParams& params);
     ~IGObject();
 
-    typedef unsigned int uint; // #TYPEDEF_UINT czemu nei bierze z stdafx??
+    typedef unsigned int uint; // #TYPEDEF_UINT czemu nei bierze z stdafx?? //#TYPEDEF_UINT zamienic wszystkie moje uinty na uint32_t
 
     // Init PhysX
     virtual bool InitPhysXObj() { return true; }

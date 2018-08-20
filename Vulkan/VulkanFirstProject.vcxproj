@@ -168,7 +168,7 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ImageManager.h" />
+    <ClInclude Include="Source\Utils\ImageUtils.h" />
     <ClInclude Include="Source\Objects\stdafx.h" />
     <ClInclude Include="Source\Particles\Emitters\BaseEmitter.h" />
     <ClInclude Include="Source\Particles\Emitters\IEmitter.h" />
@@ -186,7 +186,7 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     <ClInclude Include="Source\Objects\GBaseObject.h" />
     <ClInclude Include="Source\Objects\IGObject.h" />
     <ClInclude Include="Source\Techs\ITechnique.h" />
-    <ClInclude Include="Source\Techs\ShaderUtils.h" />
+    <ClInclude Include="Source\Utils\ShaderUtils.h" />
     <ClInclude Include="Source\stdafx.h" />
     <ClInclude Include="Source\Techs\BaseTechnique.h" />
     <ClInclude Include="Source\Utils\stdafx.h" />
@@ -194,7 +194,7 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     <ClInclude Include="Source\VulkanRenderer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ImageManager.cpp" />
+    <ClCompile Include="Source\Utils\ImageUtils.cpp" />
     <ClCompile Include="Source\Particles\Emitters\BaseEmitter.cpp" />
     <ClCompile Include="Source\Particles\Emitters\IEmitter.cpp" />
     <ClCompile Include="Source\Camera.cpp" />
@@ -208,7 +208,7 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     <ClCompile Include="Source\Objects\GBaseObject.cpp" />
     <ClCompile Include="Source\Objects\IGObject.cpp" />
     <ClCompile Include="Source\Techs\ITechnique.cpp" />
-    <ClCompile Include="Source\Techs\ShaderUtils.cpp" />
+    <ClCompile Include="Source\Utils\ShaderUtils.cpp" />
     <ClCompile Include="Source\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

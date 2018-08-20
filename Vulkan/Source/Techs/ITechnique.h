@@ -1,5 +1,5 @@
 #pragma once
-#include "ShaderUtils.h"
+#include "../Utils/ShaderUtils.h"
 
 class CVulkanRenderer;
 
@@ -9,23 +9,30 @@ public:
     ITechnique() = default;
     virtual ~ITechnique();
 
+    // Typedefs
+    typedef std::pair<VkImageView, VkSampler> TImgSampler;
+
     // Init
-    bool Init();
-    bool Shutdown();
-    bool CreateGraphicsPipeline();
+    virtual bool Init();
+    virtual bool Shutdown();
+    virtual bool CreateGraphicsPipeline();
 
     // Getters
     VkPipeline GetPipeline() const { return m_GraphicsPipeline; }
     VkPipelineLayout GetPipelineLayout() const  { return m_PipelineLayout; }
 
     // UniBuff getters
+    virtual VkBuffer UniBuffer() const { return nullptr; }
+    virtual VkDeviceMemory UniBufferMemory() const { return nullptr; }
     virtual size_t GetUniBuffObjOffset() const;
     virtual size_t GetSingleUniBuffObjSize() const { return 0; }
-    virtual VkBuffer BaseObjUniBuffer() const { return nullptr; }
-    virtual VkDeviceMemory BaseObjUniBufferMemory() const { return nullptr; }
+
+    // Image getters
+    virtual void GetImageSamplerPairs(std::vector<TImgSampler>& out_pairs) const {}
 
     // Buffers handle
-    virtual bool CreateUniBuffers() { return false; }
+    virtual bool CreateRenderObjects() { return true; }
+    virtual void DestroyRenderObjects() {}
 
 protected:
     // Pure virtual

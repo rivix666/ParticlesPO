@@ -92,7 +92,7 @@ bool CEngine::Init()
         REGISTER_EMITTER(em, -1);
         em->Emit(4);
 
-        auto em1 = new CBaseEmitter(2, 1000);
+        auto em1 = new CBaseEmitter(1, 1000);
         REGISTER_EMITTER(em1, -1);
         em1->Emit(4);
 
@@ -110,7 +110,6 @@ bool CEngine::RegisterTechniques()
     if (m_TechMgr)
     {
         CGBaseObject::s_TechId = REGISTER_TECH(BaseVertex, new CBaseTechnique);
-        REGISTER_TECH(ParticleVertex, new CParticleBaseTechnique);
         REGISTER_TECH(ParticleVertex, new CParticleBaseTechnique);
         return true;
     }
