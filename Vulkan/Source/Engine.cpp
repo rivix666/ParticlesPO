@@ -92,6 +92,10 @@ bool CEngine::Init()
         REGISTER_EMITTER(em, -1);
         em->Emit(4);
 
+        auto em1 = new CBaseEmitter(2, 1000);
+        REGISTER_EMITTER(em1, -1);
+        em1->Emit(4);
+
         // Create Object control and camera
         m_ObjectControl = new CGObjectControl(m_Renderer->GetDevice());
         m_Camera = new CCamera();
@@ -107,6 +111,7 @@ bool CEngine::RegisterTechniques()
     {
         CGBaseObject::s_TechId = REGISTER_TECH(BaseVertex, new CBaseTechnique);
         REGISTER_TECH(ParticleVertex, new CParticleBaseTechnique);
+        REGISTER_TECH(ParticleVertex, new CParticleBaseTechnique);
         return true;
     }
     return false;
@@ -119,6 +124,13 @@ void CEngine::Frame()
 
     // Update scene
     UpdateScene();
+
+    // Reset command bufers if needed
+    if (m_CmdBuffersResetRequested)
+    {
+        Renderer()->RecreateCommandBuffer();
+        m_CmdBuffersResetRequested = false;
+    }
 
     // Render
     m_Renderer->PresentQueueWaitIdle();
@@ -135,10 +147,6 @@ void CEngine::UpdateScene()
     m_PxMgr->SimulatePhysX();
     m_ParticleMgr->Simulate();
     m_ParticleMgr->UpdateBuffers();
-
-    //#PARTICLES only temporary for tests
-    g_Engine->Renderer()->RecreateCommandBuffer();
-
 }
 
 void CEngine::RecordCommandBuffer(VkCommandBuffer& cmd_buff)

@@ -11,8 +11,18 @@ layout(location = 1) in float inLife;
 // Output
 layout(location = 0) out vec4 outColor;
 
+vec4 CalcControlAdditiveBlend(in vec4 color, in float burn)
+{
+    vec3 testCol =  color.rgb *  color.a;
+    float alpha = color.a * (1.0f - burn);
+    return vec4(testCol.rgb, alpha);
+}
+
 void main()
 {
     vec4 col = texture(texSampler, fragTexCoord);
-    outColor = vec4(col.x, col.y, col.z, inLife);
+
+    col.a *= inLife;
+
+    outColor = CalcControlAdditiveBlend(col, 1.0f);
 }

@@ -22,24 +22,24 @@ const float SIZE = 1.0f;
 
 void main()
 {   
-    vec4 pos = gl_in[0].gl_Position;
+    vec4 pos = gl_in[0].gl_Position; 
 
-    gl_Position = (gl_in[0].gl_Position + vec4(-SIZE, SIZE, 0.0f, 0.0f));
+    gl_Position = cam_ubo.proj * (pos + vec4(-SIZE, SIZE, 0.0f, 0.0f));
     geom_texcoord = vec2(-1.0f, 1.0f);
     outLife = inLife[0];
     EmitVertex();
     
-    gl_Position = (gl_in[0].gl_Position + vec4(-SIZE, -SIZE, 0.0f, 0.0f));
+    gl_Position = cam_ubo.proj * (pos + vec4(SIZE, SIZE, 0.0f, 0.0f));
     geom_texcoord = vec2(-1.0f, -1.0f);
     outLife = inLife[0];
     EmitVertex();
     
-    gl_Position = (gl_in[0].gl_Position + vec4(SIZE, SIZE, 0.0f, 0.0f));
+    gl_Position = cam_ubo.proj * (pos + vec4(-SIZE, -SIZE, 0.0f, 0.0f));
     geom_texcoord = vec2(1.0f, 1.0f);
     outLife = inLife[0];
     EmitVertex();
     
-    gl_Position = (gl_in[0].gl_Position + vec4(SIZE, -SIZE, 0.0f, 0.0f));
+    gl_Position = cam_ubo.proj * (pos + vec4(SIZE, -SIZE, 0.0f, 0.0f));
     geom_texcoord = vec2(1.0f, -1.0f);
     outLife = inLife[0];
     EmitVertex();

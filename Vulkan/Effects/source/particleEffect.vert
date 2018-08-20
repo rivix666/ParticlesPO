@@ -17,6 +17,6 @@ layout(location = 0) out float outLife;
 
 void main()
 {
-    gl_Position = cam_ubo.proj * cam_ubo.view * vec4(inPosition, 1.0f);
+    gl_Position = cam_ubo.view * vec4(inPosition, 1.0f);
     outLife = inLife;
 }

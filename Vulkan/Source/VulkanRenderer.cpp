@@ -257,7 +257,6 @@ void CVulkanRenderer::PresentQueueWaitIdle()
 
 void CVulkanRenderer::RecreateCommandBuffer()
 {
-    // #CMD_BUFF In the future think about vkResetCommandBuffer() method
     for (auto& cmd_buff : m_CommandBuffers)
     {
         vkResetCommandBuffer(cmd_buff, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);

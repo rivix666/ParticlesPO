@@ -39,6 +39,7 @@ public:
 
     // Misc
     void RecordCommandBuffer(VkCommandBuffer& cmd_buff);
+    void RequestCommandBufferReset() { m_CmdBuffersResetRequested = true; }
 
 private:
     // Wnd
@@ -60,5 +61,8 @@ private:
     // Timer
     double m_LastFrameTime = 0.0;
     CTimer m_FrameTimer = CTimer(ETimerType::MiliSeconds);
+
+    // Misc
+    bool m_CmdBuffersResetRequested = false;
 };
 

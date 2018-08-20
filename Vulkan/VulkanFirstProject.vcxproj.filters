@@ -94,6 +94,7 @@
     </ClInclude>
     <ClInclude Include="Source\Particles\Emitters\BaseEmitter.h" />
     <ClInclude Include="Source\Techs\ParticleBaseTechnique.h" />
+    <ClInclude Include="ImageManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Utils\Timer.cpp">
@@ -151,6 +152,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\Techs\ParticleBaseTechnique.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

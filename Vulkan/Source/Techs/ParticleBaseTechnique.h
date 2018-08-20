@@ -25,6 +25,7 @@ public:
     ~CParticleBaseTechnique();
 
 protected:
+    void GetColorBlendDesc(VkPipelineColorBlendStateCreateInfo& colorBlending) override;
     void GetInputAssemblyDesc(VkPipelineInputAssemblyStateCreateInfo& inputAssembly) override;
     void GetVertexInputDesc(VkPipelineVertexInputStateCreateInfo& vertexInputInfo) override;
     void GetShadersDesc(SShaderParams& params) override;

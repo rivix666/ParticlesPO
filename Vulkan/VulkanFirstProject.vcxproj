@@ -168,6 +168,7 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ImageManager.h" />
     <ClInclude Include="Source\Objects\stdafx.h" />
     <ClInclude Include="Source\Particles\Emitters\BaseEmitter.h" />
     <ClInclude Include="Source\Particles\Emitters\IEmitter.h" />
@@ -193,6 +194,7 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     <ClInclude Include="Source\VulkanRenderer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ImageManager.cpp" />
     <ClCompile Include="Source\Particles\Emitters\BaseEmitter.cpp" />
     <ClCompile Include="Source\Particles\Emitters\IEmitter.cpp" />
     <ClCompile Include="Source\Camera.cpp" />

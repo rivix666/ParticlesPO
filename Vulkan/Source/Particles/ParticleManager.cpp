@@ -44,13 +44,21 @@ bool CParticleManager::Shutdown()
 
 void CParticleManager::Simulate()
 {
+    uint old_num = m_ParticlesNum;
+
+    // Clear old counters
     m_ParticlesNum = 0;
+    for (auto& ui : m_Tech2PCount)
+        ui = 0;
+
     for (auto emit : m_Emitters)
     {
         emit->Simulate();
         m_Tech2PCount[emit->TechId()] += emit->ParticlesCount();
         m_ParticlesNum += emit->ParticlesCount();
     }
+    if (m_ParticlesNum != old_num)
+        g_Engine->RequestCommandBufferReset();
 }
 
 void CParticleManager::UpdateBuffers()
@@ -72,11 +80,7 @@ void CParticleManager::UpdateBuffers()
     for (uint i = 0; i < m_Tech2Emi.size(); i++)
     {
         if (m_Tech2Emi[i].empty() || m_Tech2PCount[i] < 1)
-        {
-            // Always clear on end
-            m_Tech2PCount[i] = 0;
             continue;
-        }
 
         for (auto* emi : m_Tech2Emi[i])
         {
@@ -90,14 +94,9 @@ void CParticleManager::UpdateBuffers()
             }
             #endif
 
-            // #PARTICLES sprawdzic czy zadziala
             memcpy(data, emi->ParticlesData(), (size_t)bufferSize);
-           // memcpy((void*)(((char*)data) + offset), emi->ParticlesData(), emi->ParticlesSize());
             offset += emi->ParticlesSize();
         }
-
-        // Always clear on end
-        m_Tech2PCount[i] = 0;
     }
 
     // Unmap staging buffer and copy its data into vertex buffer
@@ -114,6 +113,7 @@ void CParticleManager::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
     if (m_ParticlesNum < 1)
         return;
 
+    uint offset = 0;
     auto tech_mgr = g_Engine->TechMgr();
     for (uint i = 0; i < m_Tech2Emi.size(); i++)
     {
@@ -123,25 +123,13 @@ void CParticleManager::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
         auto tech = tech_mgr->GetTechnique(i);
         vkCmdBindPipeline(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipeline());
 
-        // #PARTICLES tymczasowo by zobaczyc czy rysuje particle
-        //////////////////////////////////////////////////////////////////////////
         // Bind Vertex buffer
         VkBuffer vertexBuffers[] = { m_VertexBuffer };
         VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(cmd_buff, 0, 1, vertexBuffers, offsets);
+        vkCmdDraw(cmd_buff, static_cast<uint32_t>(m_Tech2PCount[i]), 1, offset, 0);
 
-        // Prepare uni buff offset
-        uint32_t uni_offset = tech->GetUniBuffObjOffset() * i;
-        
-        vkCmdBindDescriptorSets(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipelineLayout(), 0, 1, &g_Engine->Renderer()->m_DescriptorSet, 1, &uni_offset);
-        vkCmdDraw(cmd_buff, static_cast<uint32_t>(m_ParticlesNum), 1, 0, 0);
-        //////////////////////////////////////////////////////////////////////////
-
-
-        // #PARTICLES przy moim aktualnym rozumowaniu nie przejdzie,
-        // musia³bym nagrywaæ od nowa co klatkê command buffer (w sumie mo¿na to sprawdziæ jak wp³ynie na performance z reset command buffer, ale raczej kiepsko)
-        // a musia³bym to robiæ ze wzglêdu na zmieniaj¹c¹ siê liczbê particli per ró¿ne techniki, chyba ¿e przypisaæ do ka¿dej techniki sta³¹ liczbê particli to by przesz³o
-        // albo zrobiæ oddzielne vertex buffery per technika, wtedy te¿ ka¿dy particle móg³by korzystaæ z wa³snych vertexów
+        offset += m_Tech2PCount[i];
     }
 }
 
