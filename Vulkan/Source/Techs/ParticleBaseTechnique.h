@@ -31,6 +31,9 @@ public:
     bool CreateImageView();
     bool CreateTextureSampler();
 
+    // Static const variables
+    static const VkFormat TEXTURE_FORMAT = VK_FORMAT_BC3_UNORM_BLOCK;
+
 protected:
     void GetColorBlendDesc(VkPipelineColorBlendStateCreateInfo& colorBlending) override;
     void GetInputAssemblyDesc(VkPipelineInputAssemblyStateCreateInfo& inputAssembly) override;

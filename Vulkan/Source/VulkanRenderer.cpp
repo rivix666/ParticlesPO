@@ -934,15 +934,15 @@ void CVulkanRenderer::DestroyTechsRenderObjects()
 bool CVulkanRenderer::CreateDepthResources()
 {
     VkFormat depthFormat = FindDepthFormat();
-    CImageUtils::CreateImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_DepthImage, m_DepthImageMemory);
-    m_DepthImageView = CImageUtils::CreateImageView(m_DepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
-    CImageUtils::TransitionImageLayout(m_DepthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
+    image_utils::CreateImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_DepthImage, m_DepthImageMemory);
+    m_DepthImageView = image_utils::CreateImageView(m_DepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
+    image_utils::TransitionImageLayout(m_DepthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
     return true;
 }
 
 VkFormat CVulkanRenderer::FindDepthFormat()
 {
-    return CImageUtils::FindSupportedFormat(
+    return image_utils::FindSupportedFormat(
         { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
         VK_IMAGE_TILING_OPTIMAL,
         VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
@@ -1055,7 +1055,7 @@ bool CVulkanRenderer::CreateImageViews()
     m_SwapChainImageViewsVec.resize(m_SwapChainImagesVec.size());
     for (uint32_t i = 0; i < m_SwapChainImagesVec.size(); i++)
     {
-        m_SwapChainImageViewsVec[i] = CImageUtils::CreateImageView(m_SwapChainImagesVec[i], m_SwapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+        m_SwapChainImageViewsVec[i] = image_utils::CreateImageView(m_SwapChainImagesVec[i], m_SwapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
         if (m_SwapChainImageViewsVec[i] == nullptr)
             return false;
     }
@@ -1364,6 +1364,7 @@ bool CVulkanRenderer::CreateLogicalDevice()
     deviceFeatures.geometryShader = true;
     deviceFeatures.logicOp = true; // blending logical operations
     deviceFeatures.samplerAnisotropy = true;
+    deviceFeatures.textureCompressionBC = true;
 
     VkDeviceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

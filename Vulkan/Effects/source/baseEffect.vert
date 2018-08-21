@@ -27,9 +27,6 @@ out gl_PerVertex
 void main()
 {
     gl_Position = cam_ubo.proj * cam_ubo.view * obj_ubo.obj_world * vec4(inPosition, 1.0);
-
-    //gl_Position = cam_ubo.proj * ((cam_ubo.view * obj_ubo.obj_world * vec4(inPosition, 1.0)) + vec4(-10.0f, 1.0f, 0.0f, 0.0f));
-
     fragTexCoord = inTexCoord;
     fragTexMul = obj_ubo.tex_mul;
 }

@@ -1,56 +1,85 @@
 #include "stdafx.h"
 #include "ImageUtils.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <misc/stb_image.h>
+#include <gli/gli.hpp>
+#include <gli/generate_mipmaps.hpp>
 
-CImageUtils::CImageUtils(const SImageParams& params)
+bool image_utils::CreateTextureImage(SImageParams& params)
 {
-    if (!params.image_path.empty())
-        CreateTextureImage(params);
-}
+    if (params.in_image_path.empty())
+        return utils::FatalError(g_Engine->Hwnd(), "Failed to load texture image - given path was empty");
 
-bool CImageUtils::CreateTextureImage(const SImageParams& params)
-{
-    if (params.image_path.empty())
+    // Load texture
+    gli::texture2d tex_data(gli::load(params.in_image_path));
+
+    if (tex_data.empty())
         return utils::FatalError(g_Engine->Hwnd(), "Failed to load texture image");
 
-    int texWidth, texHeight, texChannels;
-    stbi_uc* pixels = stbi_load(params.image_path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-    VkDeviceSize imageSize = texWidth * texHeight * 4;
+    // Store texture size
+    auto tex_extent = tex_data.extent();
+    VkDeviceSize imageSize = tex_data.size();
 
-    if (!pixels)
-        return utils::FatalError(g_Engine->Hwnd(), "Failed to load texture image");
+    // Store texture format
+    params.out_texture_format = MapGliFormat2VkFormat(tex_data.format());
 
-    m_MipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+    // Prepare mip maps
+    params.out_mip_levels = tex_data.levels();
+    if (params.out_mip_levels == 1 && params.in_generate_mip_maps)
+    {
+        tex_data = gli::generate_mipmaps<gli::texture2d>(tex_data, gli::FILTER_LINEAR);
+        params.out_mip_levels = tex_data.levels();
+    }
 
+    // Prepare tmp staging buffer
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
     g_Engine->Renderer()->CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
+    // Move texture data into buffer
     void* data;
     vkMapMemory(g_Engine->Renderer()->GetDevice(), stagingBufferMemory, 0, imageSize, 0, &data);
-    memcpy(data, pixels, static_cast<size_t>(imageSize));
+    memcpy(data, tex_data.data(), static_cast<size_t>(imageSize));
     vkUnmapMemory(g_Engine->Renderer()->GetDevice(), stagingBufferMemory);
 
-    stbi_image_free(pixels);
+    // Create Image
+    CreateImage(tex_extent.x, tex_extent.y, params.out_mip_levels, params.out_texture_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, params.out_texture_image, params.out_texture_image_memory);
+ 
+    // Change image layput
+    TransitionImageLayout(params.out_texture_image, params.out_texture_format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, params.out_mip_levels);
+    
+    // Prepare buffer copy regions for each mip level
+    uint32_t offset = 0;
+    std::vector<VkBufferImageCopy> bufferCopyRegions;
+    for (uint32_t i = 0; i < params.out_mip_levels; i++)
+    {
+        VkBufferImageCopy bufferCopyRegion = {};
+        bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        bufferCopyRegion.imageSubresource.mipLevel = i;
+        bufferCopyRegion.imageSubresource.baseArrayLayer = 0;
+        bufferCopyRegion.imageSubresource.layerCount = 1;
+        bufferCopyRegion.imageExtent.width = static_cast<uint32_t>(tex_data[i].extent().x);
+        bufferCopyRegion.imageExtent.height = static_cast<uint32_t>(tex_data[i].extent().y);
+        bufferCopyRegion.imageExtent.depth = 1;
+        bufferCopyRegion.bufferOffset = offset;
 
-    CreateImage(texWidth, texHeight, m_MipLevels, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_TextureImage, m_TextureImageMemory);
+        bufferCopyRegions.push_back(bufferCopyRegion);
+        offset += static_cast<uint32_t>(tex_data[i].size());
+    }
 
-    TransitionImageLayout(m_TextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_MipLevels);
-    CopyBufferToImage(stagingBuffer, m_TextureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-    //transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps // #MIPMAPS
+    // Copy texture from staging buffer into newly created image
+    VkCommandBuffer commandBuffer = g_Engine->Renderer()->BeginSingleTimeCommands();
+    vkCmdCopyBufferToImage(commandBuffer, stagingBuffer, params.out_texture_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32_t>(bufferCopyRegions.size()), bufferCopyRegions.data());
+    g_Engine->Renderer()->EndSingleTimeCommands(commandBuffer);
 
+    // Release staging buffer and texture
+    tex_data.clear();
     vkDestroyBuffer(g_Engine->Renderer()->GetDevice(), stagingBuffer, nullptr);
     vkFreeMemory(g_Engine->Renderer()->GetDevice(), stagingBufferMemory, nullptr);
-
-    if (params.generate_mip_maps)
-        GenerateMipmaps(m_TextureImage, texWidth, texHeight, m_MipLevels);
 
     return true;
 }
 
-bool CImageUtils::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
+bool image_utils::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
 {
     VkImageCreateInfo imageInfo = {};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -84,7 +113,7 @@ bool CImageUtils::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevel
     vkBindImageMemory(g_Engine->Renderer()->GetDevice(), image, imageMemory, 0);
 }
 
-void CImageUtils::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels)
+void image_utils::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels)
 {
     VkCommandBuffer commandBuffer = g_Engine->Renderer()->BeginSingleTimeCommands();
 
@@ -156,7 +185,7 @@ void CImageUtils::TransitionImageLayout(VkImage image, VkFormat format, VkImageL
     g_Engine->Renderer()->EndSingleTimeCommands(commandBuffer);
 }
 
-void CImageUtils::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+void image_utils::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t mip_level /*= 0*/)
 {
     VkCommandBuffer commandBuffer = g_Engine->Renderer()->BeginSingleTimeCommands();
 
@@ -165,7 +194,7 @@ void CImageUtils::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t wid
     region.bufferRowLength = 0;
     region.bufferImageHeight = 0;
     region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    region.imageSubresource.mipLevel = 0;
+    region.imageSubresource.mipLevel = mip_level;
     region.imageSubresource.baseArrayLayer = 0;
     region.imageSubresource.layerCount = 1;
     region.imageOffset = { 0, 0, 0 };
@@ -181,7 +210,30 @@ void CImageUtils::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t wid
     g_Engine->Renderer()->EndSingleTimeCommands(commandBuffer);
 }
 
-VkFormat CImageUtils::FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+VkFormat image_utils::MapGliFormat2VkFormat(int gli_format_type)
+{
+    switch (gli_format_type)
+    {
+    case gli::texture::format_type::FORMAT_RGBA_BP_UNORM_BLOCK16:
+        return VkFormat::VK_FORMAT_BC7_UNORM_BLOCK;
+    case gli::texture::format_type::FORMAT_RGBA_DXT3_UNORM_BLOCK16:
+        return VkFormat::VK_FORMAT_BC2_UNORM_BLOCK;
+    case gli::texture::format_type::FORMAT_RG_ATI2N_UNORM_BLOCK16:
+        return VkFormat::VK_FORMAT_BC5_UNORM_BLOCK;
+    case gli::texture::format_type::FORMAT_R_ATI1N_UNORM_BLOCK8:
+        return VkFormat::VK_FORMAT_BC4_UNORM_BLOCK;
+    case gli::texture::format_type::FORMAT_RGBA_DXT5_UNORM_BLOCK16:
+        return VkFormat::VK_FORMAT_BC3_UNORM_BLOCK;
+    case gli::texture::format_type::FORMAT_RGBA_DXT1_UNORM_BLOCK8:
+        return VkFormat::VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
+    case gli::texture::format_type::FORMAT_BGRA8_UNORM_PACK8:
+        return VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
+    }
+    utils::FatalError(g_Engine->Hwnd(), "Unknown texture format");
+    return VkFormat::VK_FORMAT_UNDEFINED;
+}
+
+VkFormat image_utils::FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
 {
     for (VkFormat format : candidates)
     {
@@ -198,7 +250,7 @@ VkFormat CImageUtils::FindSupportedFormat(const std::vector<VkFormat>& candidate
     return VkFormat();
 }
 
-VkImageView CImageUtils::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels)
+VkImageView image_utils::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels)
 {
     VkImageViewCreateInfo viewInfo = {};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -219,87 +271,4 @@ VkImageView CImageUtils::CreateImageView(VkImage image, VkFormat format, VkImage
     }
 
     return imageView;
-}
-
-void CImageUtils::GenerateMipmaps(VkImage image, int32_t texWidth, int32_t texHeight, uint32_t mipLevels)
-{
-    VkCommandBuffer commandBuffer = g_Engine->Renderer()->BeginSingleTimeCommands();
-
-    VkImageMemoryBarrier barrier = {};
-    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.image = image;
-    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = 1;
-    barrier.subresourceRange.levelCount = 1;
-
-    int32_t mipWidth = texWidth;
-    int32_t mipHeight = texHeight;
-
-    for (uint32_t i = 1; i < mipLevels; i++)
-    {
-        barrier.subresourceRange.baseMipLevel = i - 1;
-        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-
-        vkCmdPipelineBarrier(commandBuffer,
-            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier);
-
-        VkImageBlit blit = {};
-        blit.srcOffsets[0] = { 0, 0, 0 };
-        blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
-        blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        blit.srcSubresource.mipLevel = i - 1;
-        blit.srcSubresource.baseArrayLayer = 0;
-        blit.srcSubresource.layerCount = 1;
-        blit.dstOffsets[0] = { 0, 0, 0 };
-        blit.dstOffsets[1] = { mipWidth / 2, mipHeight / 2, 1 };
-        blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        blit.dstSubresource.mipLevel = i;
-        blit.dstSubresource.baseArrayLayer = 0;
-        blit.dstSubresource.layerCount = 1;
-
-        vkCmdBlitImage(commandBuffer,
-            image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-            image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            1, &blit,
-            VK_FILTER_LINEAR);
-
-        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-        vkCmdPipelineBarrier(commandBuffer,
-            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier);
-
-        if (mipWidth > 1)
-            mipWidth /= 2;
-        if (mipHeight > 1)
-            mipHeight /= 2;
-    }
-
-    barrier.subresourceRange.baseMipLevel = mipLevels - 1;
-    barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-    vkCmdPipelineBarrier(commandBuffer,
-        VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
-        0, nullptr,
-        0, nullptr,
-        1, &barrier);
-
-    g_Engine->Renderer()->EndSingleTimeCommands(commandBuffer);
 }

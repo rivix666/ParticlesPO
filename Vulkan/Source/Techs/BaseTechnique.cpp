@@ -100,12 +100,12 @@ bool CBaseTechnique::CreateUniBuffer()
 
 bool CBaseTechnique::LoadImage()
 {
-    SImageParams params = { "Images/Other/ground.png", true };
-    CImageUtils img_utils(params);
+    image_utils::SImageParams params = { "Images/Other/ground.dds", true };
+    image_utils::CreateTextureImage(params);
 
-    m_TextureImage = img_utils.TextureImage();
-    m_TextureImageMemory = img_utils.TextureImageMemory();
-    m_MipLevels = img_utils.MipLevels();
+    m_TextureImage = params.out_texture_image;
+    m_TextureImageMemory = params.out_texture_image_memory;
+    m_MipLevels = params.out_mip_levels;
 
     if (!m_TextureImage || !m_TextureImageMemory)
         return utils::FatalError(g_Engine->Hwnd(), "Failed to initialaze CBaseTechnique");
@@ -115,7 +115,7 @@ bool CBaseTechnique::LoadImage()
 
 bool CBaseTechnique::CreateImageView()
 {
-    m_TextureImageView = CImageUtils::CreateImageView(m_TextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, m_MipLevels);
+    m_TextureImageView = image_utils::CreateImageView(m_TextureImage, TEXTURE_FORMAT, VK_IMAGE_ASPECT_COLOR_BIT, m_MipLevels);
     return m_TextureImageView != nullptr;
 }
 

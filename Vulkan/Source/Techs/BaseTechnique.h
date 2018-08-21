@@ -42,6 +42,9 @@ public:
     bool CreateImageView();
     bool CreateTextureSampler();
 
+    // Static const variables
+    static const VkFormat TEXTURE_FORMAT = VK_FORMAT_R8G8B8A8_UNORM;
+
 protected:
     void GetVertexInputDesc(VkPipelineVertexInputStateCreateInfo& vertexInputInfo) override;
     void GetShadersDesc(SShaderParams& params) override;
