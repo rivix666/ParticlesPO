@@ -1,12 +1,22 @@
 #pragma once
-#include "Camera.h"
-#include "PxManager.h"
+
+// Renderer includes
 #include "VulkanRenderer.h"
+#include "DescriptorManager.h"
+
+// PhysX includes
+#include "PxManager.h"
+
+// Objects/Particles includes
 #include "Objects/GObjectControl.h"
 #include "Particles/ParticleManager.h"
+
+// Misc includes
+#include "Camera.h"
 #include "Utils/Timer.h"
 
 class CTechniqueManager;
+class CDescriptorManager;
 
 class CEngine
 {
@@ -22,20 +32,27 @@ public:
     void Frame();
     void UpdateScene();
 
-    // Getters
+    // Window Getters
     inline HWND Hwnd() const { return m_Hwnd; }
     inline GLFWwindow* GlfwWindow() const { return m_MainWnd; }
-    inline CVulkanRenderer* Renderer() const { return m_Renderer; }
-    inline CGObjectControl* ObjectControl() const { return m_ObjectControl; }
-    inline CPxManager* PxManager() const { return m_PxMgr; }
-    inline VkDevice Device() const { return m_Renderer != nullptr ? m_Renderer->GetDevice() : nullptr; }
-    inline CParticleManager* ParticleMgr() const { return m_ParticleMgr; }
-    inline CTechniqueManager* TechMgr() const { return m_TechMgr; }
-    inline CCamera* Camera() const { return m_Camera; }
 
-    // Timer
+    // Managers Getters
+    inline CTechniqueManager* TechMgr() const { return m_TechMgr; }
+    inline CPxManager* PxManager() const { return m_PxMgr; }
+    inline CParticleManager* ParticleMgr() const { return m_ParticleMgr; }
+    inline CGObjectControl* ObjectControl() const { return m_ObjectControl; }
+
+    // Renderer Getters
+    inline CVulkanRenderer* Renderer() const { return m_Renderer; }
+    inline CDescriptorManager* DescMgr() const { return m_Renderer != nullptr ? m_Renderer->DescMgr() : nullptr; }
+    inline VkDevice Device() const { return m_Renderer != nullptr ? m_Renderer->GetDevice() : nullptr; }
+
+    // Timer Getters
     inline CTimer& Timer() { return m_FrameTimer; }
     inline double LastFrameTime() const { return m_LastFrameTime; }
+
+    // Misc Getters
+    inline CCamera* Camera() const { return m_Camera; }
 
     // Misc
     void RecordCommandBuffer(VkCommandBuffer& cmd_buff);

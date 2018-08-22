@@ -2,6 +2,7 @@
 #include "GObjectControl.h"
 #include "IGObject.h"
 #include "../Techs/TechniqueManager.h"
+#include "../DescriptorManager.h"
 
 CGObjectControl::CGObjectControl(VkDevice device)
     : m_Device(device)
@@ -96,16 +97,19 @@ void CGObjectControl::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
             // Prepare uni buff offset
             uint32_t uni_offset = tech->GetUniBuffObjOffset() * j;
 
+            // Prepare Descriptor Sets vector
+            std::vector<VkDescriptorSet> desc_sets = { g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::GENERAL), g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::OBJECTS) };
+
             // Record command
             if (obj->IndexBuffer())
             {
                 vkCmdBindIndexBuffer(cmd_buff, obj->IndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
-                vkCmdBindDescriptorSets(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipelineLayout(), 0, 1, g_Engine->Renderer()->DescriptorSet(), 1, &uni_offset);  //#UNI_BUFF
+                vkCmdBindDescriptorSets(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipelineLayout(), 0, (uint32_t)desc_sets.size(), desc_sets.data(), 1, &uni_offset);  //#UNI_BUFF
                 vkCmdDrawIndexed(cmd_buff, static_cast<uint32_t>(obj->GetIndicesCount()), 1, 0, 0, 0);
             }
             else
             {
-                vkCmdBindDescriptorSets(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipelineLayout(), 0, 1, g_Engine->Renderer()->DescriptorSet(), 1, &uni_offset);  //#UNI_BUFF
+                vkCmdBindDescriptorSets(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipelineLayout(), 0, (uint32_t)desc_sets.size(), desc_sets.data(), 1, &uni_offset);  //#UNI_BUFF
                 vkCmdDraw(cmd_buff, static_cast<uint32_t>(obj->GetVerticesCount()), 1, 0, 0);
             }
         }

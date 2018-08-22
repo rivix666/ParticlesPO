@@ -1,13 +1,16 @@
 #include "stdafx.h"
 #include "Engine.h"
-#include "Camera.h"
-#include "InputsListener.h"
-#include "Objects/GBaseObject.h"
-#include "Techs/TechniqueManager.h"
 
-// Techniques
+// Objects includes
+#include "Objects/GBaseObject.h"
+
+// Techniques includes
 #include "Techs/BaseTechnique.h"
+#include "Techs/TechniqueManager.h"
 #include "Techs/ParticleBaseTechnique.h"
+
+// Misc includes
+#include "InputsListener.h"
 
 // #PARTICLES tymczasowe do testów
 #include "Particles/Emitters/BaseEmitter.h"

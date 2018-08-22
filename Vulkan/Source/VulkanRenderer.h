@@ -1,11 +1,12 @@
 #pragma once
 #include "Objects/IGObject.h"
 
+class CDescriptorManager;
+
 class CVulkanRenderer
 {
 public:
     CVulkanRenderer(GLFWwindow* window);
-    ~CVulkanRenderer();
 
     // Init
     bool Init();
@@ -24,9 +25,11 @@ public:
     VkBuffer CamUniBuffer() const { return m_CamUniBuffer; }
     VkDeviceMemory CamUniBufferMemory() const { return m_CamUniBufferMemory; }
 
-    const VkDescriptorSet* DescriptorSet() const { return &m_DescriptorSet; }
-    const VkDescriptorPool* DescriptorPool() const { return &m_DescriptorPool; }
-    const VkDescriptorSetLayout* DescriptorSetLayout() const { return &m_DescriptorSetLayout; }
+    // Descriptor Sets
+    CDescriptorManager* DescMgr() const;
+    // const VkDescriptorSet* DescriptorSet() const { return &m_DescriptorSet; }
+    // const VkDescriptorPool* DescriptorPool() const { return &m_DescriptorPool; }
+    // const VkDescriptorSetLayout* DescriptorSetLayout() const { return &m_DescriptorSetLayout; }
 
     // Buffers
     uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -101,12 +104,13 @@ protected:
     bool RecreateSwapChainIfNeeded(const VkResult& result, bool allow_suboptimal = true);
 
     // Descriptor Sets
-    bool CreateDescriptorSetLayout();
     bool CreateDescriptorPool();
-    bool CreateDescriptorSet();
+    // bool CreateDescriptorSetLayout();
+    // bool CreateDescriptorPool();
+    // bool CreateDescriptorSet();
 
     // Buffers
-    bool CreateUniformBuffers();
+    bool CreateGeneralUniformBuffers();
     bool CreateTechsRenderObjects();
     void DestroyTechsRenderObjects();
 
@@ -140,8 +144,8 @@ private:
 
     // SwapChain handle
     VkSwapchainKHR      m_SwapChain = nullptr;
-    VkFormat            m_SwapChainImageFormat;
-    VkExtent2D          m_SwapChainExtent;
+    VkFormat            m_SwapChainImageFormat = VK_FORMAT_UNDEFINED;
+    VkExtent2D          m_SwapChainExtent = { 0, 0 };
 
     std::vector<VkImage> m_SwapChainImagesVec;
     std::vector<VkImageView> m_SwapChainImageViewsVec;
@@ -157,9 +161,10 @@ private:
     VkImageView m_DepthImageView = nullptr;
 
     // Descriptor Set
-    VkDescriptorSet m_DescriptorSet = nullptr;
-    VkDescriptorPool m_DescriptorPool = nullptr;
-    VkDescriptorSetLayout m_DescriptorSetLayout = nullptr;
+    CDescriptorManager* m_DescMgr = nullptr;
+    //VkDescriptorSet m_DescriptorSet = nullptr;
+    //VkDescriptorPool m_DescriptorPool = nullptr;
+    //VkDescriptorSetLayout m_DescriptorSetLayout = nullptr;
 
     // Command buffers
     VkCommandPool m_CommandPool = nullptr;
@@ -184,6 +189,9 @@ private:
 
     // Device properties
     size_t m_MinUniformBufferOffsetAlignment = 0;
+
+    // Misc
+    uint32_t m_SubpassesCount = 0;
 
 #ifdef _DEBUG
     // Debug

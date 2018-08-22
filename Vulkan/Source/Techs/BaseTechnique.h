@@ -24,9 +24,9 @@ public:
     CBaseTechnique() = default;
 
     // UniBuff getters
-    VkBuffer UniBuffer() const { return m_BaseObjUniBuffer; }
-    VkDeviceMemory UniBufferMemory() const { return m_BaseObjUniBufferMemory; }
-    size_t GetSingleUniBuffObjSize() const { return sizeof(SObjUniBuffer); }
+    VkBuffer UniBuffer() const override { return m_BaseObjUniBuffer; }
+    VkDeviceMemory UniBufferMemory() const override { return m_BaseObjUniBufferMemory; }
+    size_t GetSingleUniBuffObjSize() const override { return sizeof(SObjUniBuffer); }
 
     // Image getters
     void GetImageSamplerPairs(std::vector<TImgSampler>& out_pairs) const override;
@@ -47,7 +47,9 @@ public:
 
 protected:
     void GetVertexInputDesc(VkPipelineVertexInputStateCreateInfo& vertexInputInfo) override;
+    void GetPipelineLayoutDesc(VkPipelineLayoutCreateInfo& pipelineLayoutInfo) override;
     void GetShadersDesc(SShaderParams& params) override;
+    uint32_t GetRenderSubpassIndex() const override { return 0; } //#SUBPASSES
 
 private:
     // Uni buffers

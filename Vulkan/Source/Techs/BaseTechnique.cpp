@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "BaseTechnique.h"
 #include "../Utils/ImageUtils.h"
+#include "../DescriptorManager.h"
 
 void BaseVertex::GetBindingDescription(VkVertexInputBindingDescription& out_desc)
 {
@@ -46,6 +47,27 @@ bool CBaseTechnique::CreateRenderObjects()
         return false;
 
     if (!CreateUniBuffer())
+        return false;
+
+    // Register buffers in Descriptor Set
+    std::vector<VkBuffer> buffers = { m_BaseObjUniBuffer };
+    std::vector<size_t> sizes = { sizeof(SObjUniBuffer) };
+    if (!g_Engine->Renderer()->DescMgr()->RegisterDescriptor(
+        buffers, sizes,
+        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+        VK_SHADER_STAGE_VERTEX_BIT,
+        (uint32_t)EDescSetRole::OBJECTS,
+        g_Engine->Renderer()->DescMgr()->GetNextFreeLocationId((uint32_t)EDescSetRole::OBJECTS)))
+        return false;
+
+    // Register images in Descriptor Set
+    std::vector<TImgSampler> img_pairs = { TImgSampler(m_TextureImageView, m_TextureSampler) };
+    if (!g_Engine->Renderer()->DescMgr()->RegisterDescriptor(
+        img_pairs, {},
+        VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+        VK_SHADER_STAGE_FRAGMENT_BIT,
+        (uint32_t)EDescSetRole::OBJECTS,
+        g_Engine->Renderer()->DescMgr()->GetNextFreeLocationId((uint32_t)EDescSetRole::OBJECTS)))
         return false;
 
     return true;
@@ -158,6 +180,14 @@ void CBaseTechnique::GetVertexInputDesc(VkPipelineVertexInputStateCreateInfo& ve
     vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(m_AttributesDesc.size());
     vertexInputInfo.pVertexBindingDescriptions = &m_BindingDesc;
     vertexInputInfo.pVertexAttributeDescriptions = m_AttributesDesc.data();
+}
+
+void CBaseTechnique::GetPipelineLayoutDesc(VkPipelineLayoutCreateInfo& pipelineLayoutInfo)
+{
+    static std::vector<VkDescriptorSetLayout> lays = { g_Engine->DescMgr()->DescriptorSetLayout((uint32_t)EDescSetRole::GENERAL), g_Engine->DescMgr()->DescriptorSetLayout((uint32_t)EDescSetRole::OBJECTS) };
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = (uint32_t)lays.size();
+    pipelineLayoutInfo.pSetLayouts = lays.data();
 }
 
 void CBaseTechnique::GetShadersDesc(SShaderParams& params)

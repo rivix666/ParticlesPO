@@ -38,7 +38,9 @@ protected:
     void GetColorBlendDesc(VkPipelineColorBlendStateCreateInfo& colorBlending) override;
     void GetInputAssemblyDesc(VkPipelineInputAssemblyStateCreateInfo& inputAssembly) override;
     void GetVertexInputDesc(VkPipelineVertexInputStateCreateInfo& vertexInputInfo) override;
+    void GetPipelineLayoutDesc(VkPipelineLayoutCreateInfo& pipelineLayoutInfo) override;
     void GetShadersDesc(SShaderParams& params) override;
+    uint32_t GetRenderSubpassIndex() const override { return 1; } //#SUBPASSES
 
     // Images // #PARTICLES only temporary, particles will be stored in volumetric texture, so it will be created in particles manager or somewhere else
     uint32_t m_MipLevels = 0;

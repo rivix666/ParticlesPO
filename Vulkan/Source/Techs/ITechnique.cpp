@@ -88,7 +88,7 @@ bool ITechnique::CreateGraphicsPipeline()
     //pipelineInfo.pDynamicState = nullptr; // &dynamicState; // Optional
     pipelineInfo.layout = m_PipelineLayout;
     pipelineInfo.renderPass = m_Renderer->GetRenderPass();
-    pipelineInfo.subpass = 0;
+    pipelineInfo.subpass = GetRenderSubpassIndex();
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
     //pipelineInfo.basePipelineIndex = -1; // Optional
 
@@ -219,21 +219,6 @@ void ITechnique::GetDynamicStateDesc(VkPipelineDynamicStateCreateInfo& dynamicSt
     dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicState.dynamicStateCount = 2;
     dynamicState.pDynamicStates = dynamicStates;
-}
-
-void ITechnique::GetPipelineLayoutDesc(VkPipelineLayoutCreateInfo& pipelineLayoutInfo)
-{
-    // OLD
-    // pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    // pipelineLayoutInfo.setLayoutCount = 0; // Optional
-    // pipelineLayoutInfo.pSetLayouts = nullptr; // Optional
-    // pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
-    // pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
-
-    // #UNI_BUFF tutaj wazne oooo
-    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = g_Engine->Renderer()->DescriptorSetLayout();
 }
 
 bool ITechnique::CreatePipelineLayout()

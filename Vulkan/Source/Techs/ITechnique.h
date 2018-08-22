@@ -13,50 +13,51 @@ public:
     typedef std::pair<VkImageView, VkSampler> TImgSampler;
 
     // Init
-    virtual bool Init();
-    virtual bool Shutdown();
-    virtual bool CreateGraphicsPipeline();
+    virtual bool                Init();
+    virtual bool                Shutdown();
+    virtual bool                CreateGraphicsPipeline();
 
     // Getters
-    VkPipeline GetPipeline() const { return m_GraphicsPipeline; }
-    VkPipelineLayout GetPipelineLayout() const  { return m_PipelineLayout; }
+    VkPipeline                  GetPipeline() const { return m_GraphicsPipeline; }
+    VkPipelineLayout            GetPipelineLayout() const  { return m_PipelineLayout; }
 
-    // UniBuff getters
-    virtual VkBuffer UniBuffer() const { return nullptr; }
-    virtual VkDeviceMemory UniBufferMemory() const { return nullptr; }
-    virtual size_t GetUniBuffObjOffset() const;
-    virtual size_t GetSingleUniBuffObjSize() const { return 0; }
+    // UniBuff getters          // #TECHS Should allow use uni buffers arrays
+    virtual VkBuffer            UniBuffer() const { return nullptr; }
+    virtual VkDeviceMemory      UniBufferMemory() const { return nullptr; }
+    virtual size_t              GetUniBuffObjOffset() const;
+    virtual size_t              GetSingleUniBuffObjSize() const { return 0; }
 
     // Image getters
-    virtual void GetImageSamplerPairs(std::vector<TImgSampler>& out_pairs) const {}
+    virtual void                GetImageSamplerPairs(std::vector<TImgSampler>& out_pairs) const {}
 
     // Buffers handle
-    virtual bool CreateRenderObjects() { return true; }
-    virtual void DestroyRenderObjects() {}
+    virtual bool                CreateRenderObjects() { return true; }
+    virtual void                DestroyRenderObjects() {}
 
 protected:
     // Pure virtual
-    virtual void GetVertexInputDesc(VkPipelineVertexInputStateCreateInfo& vertexInputInfo) = 0;
-    virtual void GetShadersDesc(SShaderParams& params) = 0;
+    virtual void                GetVertexInputDesc(VkPipelineVertexInputStateCreateInfo& vertexInputInfo) = 0;
+    virtual void                GetPipelineLayoutDesc(VkPipelineLayoutCreateInfo& pipelineLayoutInfo) = 0;
+    virtual void                GetShadersDesc(SShaderParams& params) = 0;
+    virtual uint32_t            GetRenderSubpassIndex() const = 0;
 
     // Get Pipeline description
-    virtual void GetInputAssemblyDesc(VkPipelineInputAssemblyStateCreateInfo& inputAssembly);
-    virtual void GetViewportDesc(VkPipelineViewportStateCreateInfo& viewportState);
-    virtual void GetRasterizerDesc(VkPipelineRasterizationStateCreateInfo& rasterizer);
-    virtual void GetMultisamplingDesc(VkPipelineMultisampleStateCreateInfo& multisampling);
-    virtual void GetDepthStencilDesc(VkPipelineDepthStencilStateCreateInfo& depthStencil);
-    virtual void GetColorBlendDesc(VkPipelineColorBlendStateCreateInfo& colorBlending);
-    virtual void GetDynamicStateDesc(VkPipelineDynamicStateCreateInfo& dynamicState);
-    virtual void GetPipelineLayoutDesc(VkPipelineLayoutCreateInfo& pipelineLayoutInfo);
+    virtual void                GetInputAssemblyDesc(VkPipelineInputAssemblyStateCreateInfo& inputAssembly);
+    virtual void                GetViewportDesc(VkPipelineViewportStateCreateInfo& viewportState);
+    virtual void                GetRasterizerDesc(VkPipelineRasterizationStateCreateInfo& rasterizer);
+    virtual void                GetMultisamplingDesc(VkPipelineMultisampleStateCreateInfo& multisampling);
+    virtual void                GetDepthStencilDesc(VkPipelineDepthStencilStateCreateInfo& depthStencil);
+    virtual void                GetColorBlendDesc(VkPipelineColorBlendStateCreateInfo& colorBlending);
+    virtual void                GetDynamicStateDesc(VkPipelineDynamicStateCreateInfo& dynamicState);
 
     // Create
-    virtual bool CreatePipelineLayout();
+    virtual bool                CreatePipelineLayout();
 
     // Pipeline
-    VkPipelineLayout m_PipelineLayout = nullptr;
-    VkPipeline       m_GraphicsPipeline = nullptr;
+    VkPipelineLayout            m_PipelineLayout = nullptr;
+    VkPipeline                  m_GraphicsPipeline = nullptr;
 
     // Renderer
-    CVulkanRenderer* m_Renderer = nullptr;
+    CVulkanRenderer*            m_Renderer = nullptr;
 };
 

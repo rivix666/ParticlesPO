@@ -1,15 +1,13 @@
 #include "stdafx.h"
 #include "VulkanRenderer.h"
+#include "DescriptorManager.h"
 #include "Objects/GBaseObject.h"
 #include "Techs/TechniqueManager.h"
 #include "Utils/ImageUtils.h"
 
 CVulkanRenderer::CVulkanRenderer(GLFWwindow* window)
     : m_Window(window)
-{
-}
-
-CVulkanRenderer::~CVulkanRenderer()
+    , m_DescMgr(new CDescriptorManager())
 {
 }
 
@@ -45,10 +43,6 @@ bool CVulkanRenderer::Init()
         if (!CreateRenderPass())
             return Shutdown();
 
-        // #UNI_BUFF
-        if (!CreateDescriptorSetLayout())
-            return Shutdown();
-
         if (!CreateCommandPool())
             return Shutdown();
 
@@ -63,14 +57,17 @@ bool CVulkanRenderer::Init()
         if (!CreateTechsRenderObjects())
             return Shutdown();
 
-        if (!CreateUniformBuffers())
+        if (!CreateGeneralUniformBuffers())
             return Shutdown();
 
-        if (!CreateDescriptorPool())
-            return Shutdown();
+         if (!CreateDescriptorPool())
+             return Shutdown();
 
-        if (!CreateDescriptorSet())
-            return Shutdown();
+         if (!DescMgr()->CreateDescriptorLayouts())
+             return Shutdown();
+
+         if (!DescMgr()->CreateDescriptorSets())
+             return Shutdown();
 
         if (!CreateCommandBuffers()) // #TECH to samo z bufforami trzeba to przemyslec jeszcze
             return Shutdown();
@@ -92,22 +89,22 @@ bool CVulkanRenderer::Shutdown()
     // Shutdown SwapChain, pipeline, renderpass
     CleanupSwapChain();
 
-    //#UNI_BUFF
-    //////////////////////////////////////////////////////////////////////////
-    if (m_DescriptorSetLayout)
-        vkDestroyDescriptorSetLayout(m_Device, m_DescriptorSetLayout, nullptr);
+    // Shutdown Descriptors Manager
+    if (m_DescMgr)
+    {
+        m_DescMgr->Shutdown();
+        DELETE(m_DescMgr);
+    }
 
+    // Shutdown General Uniform Buffers
     if (m_CamUniBuffer)
         vkDestroyBuffer(m_Device, m_CamUniBuffer, nullptr);
 
     if (m_CamUniBufferMemory)
         vkFreeMemory(m_Device, m_CamUniBufferMemory, nullptr);
 
+    // Shutdown Techs UniformBuffers/Images
     DestroyTechsRenderObjects();
-
-    if (m_DescriptorPool)
-        vkDestroyDescriptorPool(m_Device, m_DescriptorPool, nullptr);
-    //////////////////////////////////////////////////////////////////////////
 
 #ifdef _DEBUG
     DestroyDebugReportCallbackEXT(m_DebugCallback, nullptr);
@@ -173,6 +170,11 @@ void CVulkanRenderer::Render()
     // The validation layer implementation expects the application to explicitly synchronize with the GPU
     vkQueueWaitIdle(m_PresentQueue);
 #endif
+}
+
+CDescriptorManager* CVulkanRenderer::DescMgr() const
+{
+    return m_DescMgr;
 }
 
 uint32_t CVulkanRenderer::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
@@ -274,6 +276,7 @@ void CVulkanRenderer::RecreateCommandBuffer()
         vkResetCommandBuffer(cmd_buff, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
     }
 
+    // #CMD_BUFF_RESET to w koncu free czy reset -.-?
     vkFreeCommandBuffers(m_Device, m_CommandPool, static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
     CreateCommandBuffers();
 }
@@ -656,250 +659,48 @@ bool CVulkanRenderer::RecreateSwapChainIfNeeded(const VkResult& result, bool all
     return false;
 }
 
-// #DESC_SET dorobic manager do descriptor setów, oddzielny set jako main, oddzielny dla obiektów i oddzielny dla particli, ogólnie posprz¹taæ tu
-bool CVulkanRenderer::CreateDescriptorSetLayout()
-{
-    uint binding_offset = 0;
-    std::vector<VkDescriptorSetLayoutBinding> bindings;
-
-    // Cam uni buff layout
-    VkDescriptorSetLayoutBinding uboLayoutBindingCam = {};
-    uboLayoutBindingCam.binding = binding_offset++;
-    uboLayoutBindingCam.descriptorCount = 1; // #DESC_SET bardzo wazne, mozna dzieki temu przekazywaæ np array obiektów danego typu, moze zamist volumetrycznej tekstury to to u¿yæ?
-    uboLayoutBindingCam.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboLayoutBindingCam.pImmutableSamplers = nullptr;
-    uboLayoutBindingCam.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
-    bindings.push_back(uboLayoutBindingCam);
-
-    // Image buff desc
-    for (int i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
-    {
-        auto tech = g_Engine->TechMgr()->GetTechnique(i);
-        if (!tech)
-            continue;
-
-        std::vector<ITechnique::TImgSampler> img_sampler_pairs;
-        tech->GetImageSamplerPairs(img_sampler_pairs);
-        for (const auto& p : img_sampler_pairs)
-        {
-            VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
-            samplerLayoutBinding.binding = binding_offset++;
-            samplerLayoutBinding.descriptorCount = 1;
-            samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            samplerLayoutBinding.pImmutableSamplers = nullptr;
-            samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            bindings.push_back(samplerLayoutBinding);
-        }
-    }
-
-    // Techs buff desc
-    for (int i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
-    {
-        auto tech = g_Engine->TechMgr()->GetTechnique(i);
-        if (!tech || tech->GetSingleUniBuffObjSize() == 0)
-            continue;
-
-        VkDescriptorSetLayoutBinding uboLayoutBindingObj = {};
-        uboLayoutBindingObj.binding = binding_offset++;
-        uboLayoutBindingObj.descriptorCount = 1;
-        uboLayoutBindingObj.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC; //VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBindingObj.pImmutableSamplers = nullptr;
-        uboLayoutBindingObj.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        bindings.push_back(uboLayoutBindingObj);
-    }
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo = {};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-    layoutInfo.pBindings = bindings.data();
-
-    if (VKRESULT(vkCreateDescriptorSetLayout(m_Device, &layoutInfo, nullptr, &m_DescriptorSetLayout))) 
-        return utils::FatalError(g_Engine->Hwnd(), "Failed to create descriptor set layout");
-
-    return true;
-}
-
-// #DESC_SET wszsytko zwi¹zane z desc set od przepisania
 bool CVulkanRenderer::CreateDescriptorPool()
 {
+    // Uniform Buffers
+    VkDescriptorPoolSize uni_buff_size;
+    uni_buff_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uni_buff_size.descriptorCount = 4;
+    DescMgr()->RegisterDescPoolSize(uni_buff_size);
 
-//     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-//     poolSizes[0].descriptorCount = 1;
-//     poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;//VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-//     poolSizes[1].descriptorCount = 1;
-//     poolSizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-//     poolSizes[2].descriptorCount = 1;
+    // Dynamic Uniform Buffers
+    VkDescriptorPoolSize dyn_uni_buff_size;
+    dyn_uni_buff_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+    dyn_uni_buff_size.descriptorCount = 4;
+    DescMgr()->RegisterDescPoolSize(dyn_uni_buff_size);
 
-    // #DESC_SET wszsytko zwi¹zane z desc set od przepisania
-    //////////////////////////////////////////////////////////////////////////
-    std::vector<VkDescriptorPoolSize> poolSizes;
+    // Image Samplers
+    VkDescriptorPoolSize img_sam_size;
+    img_sam_size.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    img_sam_size.descriptorCount = 16;
+    DescMgr()->RegisterDescPoolSize(img_sam_size);
 
-    VkDescriptorPoolSize cam_ubo_pl;
-    cam_ubo_pl.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    cam_ubo_pl.descriptorCount = 1;
-    poolSizes.push_back(cam_ubo_pl);
-
-    // Image buff desc
-    for (int i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
-    {
-        auto tech = g_Engine->TechMgr()->GetTechnique(i);
-        if (!tech)
-            continue;
-
-        std::vector<ITechnique::TImgSampler> img_sampler_pairs;
-        tech->GetImageSamplerPairs(img_sampler_pairs);
-        for (const auto& p : img_sampler_pairs)
-        {
-            VkDescriptorPoolSize img_pl;
-            img_pl.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            img_pl.descriptorCount = 1;
-            poolSizes.push_back(img_pl);
-        }
-    }
-
-    // Techs buff desc
-    for (int i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
-    {
-        auto tech = g_Engine->TechMgr()->GetTechnique(i);
-        if (!tech || tech->GetSingleUniBuffObjSize() == 0)
-            continue;
-
-        VkDescriptorPoolSize ubo_pl;
-        ubo_pl.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        ubo_pl.descriptorCount = 1;
-        poolSizes.push_back(ubo_pl);
-    }
-    //////////////////////////////////////////////////////////////////////////
-
-    VkDescriptorPoolCreateInfo poolInfo = {};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-    poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = 1;
-
-    if (VKRESULT(vkCreateDescriptorPool(m_Device, &poolInfo, nullptr, &m_DescriptorPool)))
-        return utils::FatalError(g_Engine->Hwnd(), "Failed to create descriptor pool");
-
-    return true;
+    // Create Description Pool
+    return DescMgr()->CreateDescriptorPool((uint32_t)EDescSetRole::_COUNT_);
 }
 
-// #DESC_SET dorobic manager do descriptor setów, oddzielny set jako main, oddzielny dla obiektów i oddzielny dla particli, ogólnie posprz¹taæ tu
-bool CVulkanRenderer::CreateDescriptorSet() //tomek kaczo-dupka
+bool CVulkanRenderer::CreateGeneralUniformBuffers()
 {
-    VkDescriptorSetLayout layouts[] = { m_DescriptorSetLayout };
-    VkDescriptorSetAllocateInfo allocInfo = {};
-    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool = m_DescriptorPool;
-    allocInfo.descriptorSetCount = 1;
-    allocInfo.pSetLayouts = layouts;
-
-    if (VKRESULT(vkAllocateDescriptorSets(m_Device, &allocInfo, &m_DescriptorSet)))
-        return utils::FatalError(g_Engine->Hwnd(), "Failed to allocate descriptor set");
-
-    // #UNI_BUFF Nie potrzeba
-    VkPhysicalDeviceProperties props;
-    vkGetPhysicalDeviceProperties(g_Engine->Renderer()->GetPhysicalDevice(), &props);
-
-    size_t minUboAlignment = props.limits.minUniformBufferOffsetAlignment;
-
-    uint32_t offsets2[2];
-    offsets2[0] = 0;
-    offsets2[1] = sizeof(SCamUniBuffer);
-
-    if (minUboAlignment > 0) //kurza stopka
-    {
-        offsets2[0] = (offsets2[0] + minUboAlignment - 1) & ~(minUboAlignment - 1);
-        offsets2[1] = (offsets2[1] + minUboAlignment - 1) & ~(minUboAlignment - 1);
-    }
-
-    // Cam UniBuff desc
-    VkDescriptorBufferInfo camBufferInfo = {};  
-    //kaczko-kwarczenie
-
-    camBufferInfo.buffer = m_CamUniBuffer;
-    camBufferInfo.offset = 0;// offsets2[0];
-    camBufferInfo.range = sizeof(SCamUniBuffer);
-
-    // Image buff desc
-    std::vector<VkDescriptorImageInfo> techImageInfo;
-    for (int i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
-    {
-        auto tech = g_Engine->TechMgr()->GetTechnique(i);
-        if (!tech)
-            continue;
-
-        std::vector<ITechnique::TImgSampler> img_sampler_pairs;
-        tech->GetImageSamplerPairs(img_sampler_pairs);
-        for (const auto& p : img_sampler_pairs)
-        {
-            VkDescriptorImageInfo imageInfo = {};
-            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = p.first;
-            imageInfo.sampler = p.second;
-            techImageInfo.push_back(imageInfo);
-        }
-    }
-
-    // Techs buff desc
-    std::vector<VkDescriptorBufferInfo> techBuffInfoVec;
-    techBuffInfoVec.reserve(g_Engine->TechMgr()->TechniquesCount());
-    for (int i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
-    {
-        auto tech = g_Engine->TechMgr()->GetTechnique(i);
-        if (!tech || tech->GetSingleUniBuffObjSize() == 0)
-            continue;
-
-        VkDescriptorBufferInfo objBufferInfo = {};
-        objBufferInfo.buffer = tech->UniBuffer();
-        objBufferInfo.offset = 0;
-        objBufferInfo.range = tech->GetSingleUniBuffObjSize();
-        techBuffInfoVec.push_back(objBufferInfo);
-    }
-
-    std::vector<VkWriteDescriptorSet> descriptorWrites;
-    descriptorWrites.resize(1 + techImageInfo.size() + techBuffInfoVec.size());
-    descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrites[0].dstSet = m_DescriptorSet;
-    descriptorWrites[0].dstBinding = 0; //#UNI_BUFF bindings
-    descriptorWrites[0].dstArrayElement = 0;
-    descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    descriptorWrites[0].descriptorCount = 1;
-    descriptorWrites[0].pBufferInfo = &camBufferInfo;
-
-    uint offset = 1;
-    for (int i = 0; i < techImageInfo.size(); i++)
-    {
-        descriptorWrites[i + offset].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[i + offset].dstSet = m_DescriptorSet;
-        descriptorWrites[i + offset].dstBinding = i + offset;
-        descriptorWrites[i + offset].dstArrayElement = 0;
-        descriptorWrites[i + offset].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptorWrites[i + offset].descriptorCount = 1;
-        descriptorWrites[i + offset].pImageInfo = &techImageInfo[i];
-    }
-    offset += techImageInfo.size();
-
-    for (int i = 0; i < techBuffInfoVec.size(); i++)
-    {
-        descriptorWrites[i + offset].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[i + offset].dstSet = m_DescriptorSet;
-        descriptorWrites[i + offset].dstBinding = i + offset;
-        descriptorWrites[i + offset].dstArrayElement = 0;
-        descriptorWrites[i + offset].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;// VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrites[i + offset].descriptorCount = 1;
-        descriptorWrites[i + offset].pBufferInfo = &techBuffInfoVec[i];
-    }
-
-    vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-    return true;
-}
-
-bool CVulkanRenderer::CreateUniformBuffers()
-{
-    // Create cam uni buff
+    // Create camera Uniform Buffer
     VkDeviceSize camBufferSize = sizeof(SCamUniBuffer);
     if (!CreateBuffer(camBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_CamUniBuffer, m_CamUniBufferMemory))
         return false;
+
+    // Register Buffer in Descriptor Set
+    std::vector<VkBuffer> buffers = { m_CamUniBuffer };
+    std::vector<size_t> sizes = { camBufferSize };
+    if (!g_Engine->Renderer()->DescMgr()->RegisterDescriptor(
+        buffers, sizes,
+        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT,
+        (uint32_t)EDescSetRole::GENERAL,
+        g_Engine->Renderer()->DescMgr()->GetNextFreeLocationId((uint32_t)EDescSetRole::GENERAL)))
+        return false;
+
     return true;
 }
 
@@ -934,7 +735,7 @@ void CVulkanRenderer::DestroyTechsRenderObjects()
 bool CVulkanRenderer::CreateDepthResources()
 {
     VkFormat depthFormat = FindDepthFormat();
-    image_utils::CreateImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_DepthImage, m_DepthImageMemory);
+    image_utils::CreateImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_DepthImage, m_DepthImageMemory);
     m_DepthImageView = image_utils::CreateImageView(m_DepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
     image_utils::TransitionImageLayout(m_DepthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
     return true;
@@ -1171,62 +972,119 @@ bool CVulkanRenderer::PickPhysicalDevice()
 bool CVulkanRenderer::CreateRenderPass()
 {
     // Attachment description
-    VkAttachmentDescription colorAttachment = {};
-    colorAttachment.format = m_SwapChainImageFormat;
-    colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    //////////////////////////////////////////////////////////////////////////
+    std::array<VkAttachmentDescription, 3> attachments;
 
-    VkAttachmentDescription depthAttachment = {};
-    depthAttachment.format = FindDepthFormat();
-    depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    // Color attachment
+    attachments[0] = {};
+    attachments[0].format = m_SwapChainImageFormat;
+    attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
+    attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    attachments[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-    // Subpasses and attachment references
+    // Depth attachment - first subpass
+    attachments[1] = {};
+    attachments[1].format = FindDepthFormat();
+    attachments[1].flags = VK_ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT;
+    attachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
+    attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+    // Depth attachment - second subpass //#DEPTH mozliwe ze nie ebdzie potrzebne, wszystko zalezy od tego czy bede potrzebowac depth buffer w drugim subpassie
+    attachments[2] = {};
+    attachments[2].format = FindDepthFormat();
+    attachments[2].flags = VK_ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT;
+    attachments[2].samples = VK_SAMPLE_COUNT_1_BIT;
+    attachments[2].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+    attachments[2].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    attachments[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    attachments[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    attachments[2].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    attachments[2].finalLayout = VK_IMAGE_LAYOUT_GENERAL;
+
+    // Attachments references
+    //////////////////////////////////////////////////////////////////////////
     VkAttachmentReference colorAttachmentRef = {};
     colorAttachmentRef.attachment = 0;
     colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-    VkAttachmentReference depthAttachmentRef = {};
-    depthAttachmentRef.attachment = 1;
-    depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    VkAttachmentReference depthAttachmentRef_first = {};
+    depthAttachmentRef_first.attachment = 1;
+    depthAttachmentRef_first.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-    VkSubpassDescription subpass = {};
-    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS; // Vulkan may also support compute subpasses
-    subpass.colorAttachmentCount = 1; // The index of the attachment in this array is directly referenced from the fragment shader with the layout(location = 0) out vec4 outColor directive!
-    subpass.pColorAttachments = &colorAttachmentRef;
-    subpass.pDepthStencilAttachment = &depthAttachmentRef;
+    VkAttachmentReference depthAttachmentRef_second = {};
+    depthAttachmentRef_second.attachment = 1;
+    depthAttachmentRef_second.layout = VK_IMAGE_LAYOUT_GENERAL; // If we want to use depth buffer as input and output in the same time, It attachment references need to be palced in the same layout
 
-    VkSubpassDependency dependency = {}; // #TODO Read about it https://vulkan-tutorial.com/Drawing_a_triangle/Drawing/Rendering_and_presentation
-    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependency.dstSubpass = 0;
-    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependency.srcAccessMask = 0;
-    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    // Input references
+    VkAttachmentReference depthInputAttachmentRef = {};
+    depthInputAttachmentRef.attachment = 2;
+    depthInputAttachmentRef.layout = VK_IMAGE_LAYOUT_GENERAL;
+
+    // Subpasses description
+    //////////////////////////////////////////////////////////////////////////
+    std::array<VkSubpassDescription, 2> subpasses;
+
+    // Render objects
+    subpasses[0] = {};
+    subpasses[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS; // Vulkan may also support compute subpasses
+    subpasses[0].colorAttachmentCount = 1; // The index of the attachment in this array is directly referenced from the fragment shader with the layout(location = 0) out vec4 outColor directive!
+    subpasses[0].pColorAttachments = &colorAttachmentRef;
+    subpasses[0].pDepthStencilAttachment = &depthAttachmentRef_first;
+
+    // Particles
+    subpasses[1] = {};
+    subpasses[1].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subpasses[1].colorAttachmentCount = 1;
+    subpasses[1].pColorAttachments = &colorAttachmentRef;
+    subpasses[1].pDepthStencilAttachment = &depthAttachmentRef_second; //#DEPTH
+    subpasses[1].inputAttachmentCount = 1;
+    subpasses[1].pInputAttachments = &depthInputAttachmentRef;
+
+    // Subpass dependencies
+    //////////////////////////////////////////////////////////////////////////
+    std::array<VkSubpassDependency, 2> dependencies;
+
+    dependencies[0] = {};
+    dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependencies[0].dstSubpass = 0;
+    dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependencies[0].srcAccessMask = 0;
+    dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+    dependencies[1] = {};
+    dependencies[1].srcSubpass = 0;
+    dependencies[1].dstSubpass = 1;
+    dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependencies[1].srcAccessMask = 0;
+    dependencies[1].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependencies[1].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
     // Render pass
-    std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
+    //////////////////////////////////////////////////////////////////////////
     VkRenderPassCreateInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
     renderPassInfo.pAttachments = attachments.data();
-    renderPassInfo.subpassCount = 1;
-    renderPassInfo.pSubpasses = &subpass;
-    renderPassInfo.dependencyCount = 1;
-    renderPassInfo.pDependencies = &dependency;
+    renderPassInfo.subpassCount = static_cast<uint32_t>(subpasses.size());
+    renderPassInfo.pSubpasses = subpasses.data();
+    renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+    renderPassInfo.pDependencies = dependencies.data();
 
     if (vkCreateRenderPass(m_Device, &renderPassInfo, nullptr, &m_RenderPass) != VK_SUCCESS) 
         return utils::FatalError(g_Engine->Hwnd(), "Failed to create render pass");
+
+    // Store subpasses number
+    m_SubpassesCount = static_cast<uint32_t>(subpasses.size());
 
     return true;
 }
@@ -1236,10 +1094,11 @@ bool CVulkanRenderer::CreateFramebuffers()
     m_SwapChainFramebuffersVec.resize(m_SwapChainImageViewsVec.size());
     for (size_t i = 0; i < m_SwapChainImageViewsVec.size(); i++)
     {
-        std::array<VkImageView, 2> attachments = 
+        std::array<VkImageView, 3> attachments = 
         {
             m_SwapChainImageViewsVec[i],
-            m_DepthImageView
+            m_DepthImageView,
+            m_DepthImageView //#DEPTH
         };
 
         VkFramebufferCreateInfo framebufferInfo = {};
@@ -1316,9 +1175,30 @@ bool CVulkanRenderer::CreateCommandBuffers()
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
 
-        // Record
+        uint32_t current_subpass = 0;
         vkCmdBeginRenderPass(m_CommandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-        g_Engine->RecordCommandBuffer(m_CommandBuffers[i]);
+      
+        // First subpass - render objects
+        if (g_Engine->ObjectControl())
+        {
+            g_Engine->ObjectControl()->RecordCommandBuffer(m_CommandBuffers[i]);
+        }
+
+        // Second subpass - particles
+        if (g_Engine->ParticleMgr())
+        {
+            current_subpass++;
+            vkCmdNextSubpass(m_CommandBuffers[i], VK_SUBPASS_CONTENTS_INLINE);
+            g_Engine->ParticleMgr()->RecordCommandBuffer(m_CommandBuffers[i]);
+        }
+        
+        // The current subpass index must be equal to the number of subpasses in the render pass minus one
+        while (current_subpass < m_SubpassesCount - 1)
+        {
+            current_subpass++;
+            vkCmdNextSubpass(m_CommandBuffers[i], VK_SUBPASS_CONTENTS_INLINE);
+        }
+
         vkCmdEndRenderPass(m_CommandBuffers[i]);
 
         if (VKRESULT(vkEndCommandBuffer(m_CommandBuffers[i])))

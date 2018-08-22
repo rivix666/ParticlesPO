@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "ParticleBaseTechnique.h"
 #include "../Utils/ImageUtils.h"
+#include "../DescriptorManager.h"
 
 void ParticleVertex::GetBindingDescription(VkVertexInputBindingDescription& out_desc)
 {
@@ -48,6 +49,16 @@ bool CParticleBaseTechnique::CreateRenderObjects()
         return false;
 
     if (!CreateTextureSampler())
+        return false;
+
+    // Register images in Descriptor Set
+    std::vector<TImgSampler> img_pairs = { TImgSampler(m_TextureImageView, m_TextureSampler) };
+    if (!g_Engine->Renderer()->DescMgr()->RegisterDescriptor(
+        img_pairs, {},
+        VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+        VK_SHADER_STAGE_FRAGMENT_BIT,
+        (uint32_t)EDescSetRole::PARTICLES,
+        g_Engine->Renderer()->DescMgr()->GetNextFreeLocationId((uint32_t)EDescSetRole::PARTICLES)))
         return false;
 
     return true;
@@ -164,6 +175,14 @@ void CParticleBaseTechnique::GetVertexInputDesc(VkPipelineVertexInputStateCreate
     vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(m_AttributesDesc.size());
     vertexInputInfo.pVertexBindingDescriptions = &m_BindingDesc;
     vertexInputInfo.pVertexAttributeDescriptions = m_AttributesDesc.data();
+}
+
+void CParticleBaseTechnique::GetPipelineLayoutDesc(VkPipelineLayoutCreateInfo& pipelineLayoutInfo)
+{
+    static std::vector<VkDescriptorSetLayout> lays = { g_Engine->DescMgr()->DescriptorSetLayout((uint32_t)EDescSetRole::GENERAL), g_Engine->DescMgr()->DescriptorSetLayout((uint32_t)EDescSetRole::PARTICLES) };
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = (uint32_t)lays.size();
+    pipelineLayoutInfo.pSetLayouts = lays.data();
 }
 
 void CParticleBaseTechnique::GetShadersDesc(SShaderParams& params)

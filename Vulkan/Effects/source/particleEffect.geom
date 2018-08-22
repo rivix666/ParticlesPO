@@ -1,7 +1,7 @@
 #version 450
 
 // Uniform Buffers
-layout(binding = 0) uniform SCamUniBuffer
+layout(set = 0, binding = 0) uniform SCamUniBuffer
 {
     mat4 view;
     mat4 proj;

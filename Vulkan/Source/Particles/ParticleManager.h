@@ -43,7 +43,6 @@ private:
     TEmiVec         m_Emitters;
     TUintVec        m_Tech2PCount;
     TTechEmiVec     m_Tech2Emi;
-
     uint            m_ParticlesNum = 0;
 
     // Buffers

@@ -2,6 +2,7 @@
 #include "ParticleManager.h"
 #include "Emitters/IEmitter.h"
 #include "../Techs/TechniqueManager.h"
+#include "../DescriptorManager.h"
 
 CParticleManager::CParticleManager()
 {
@@ -121,7 +122,14 @@ void CParticleManager::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
             continue;
 
         auto tech = tech_mgr->GetTechnique(i);
+
+        // Bind Pipeline
         vkCmdBindPipeline(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipeline());
+
+        // Bind Descriptor Sets
+        std::vector<VkDescriptorSet> desc_sets = { g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::GENERAL), g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::PARTICLES) };
+        vkCmdBindDescriptorSets(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipelineLayout(), 0, (uint32_t)desc_sets.size(), desc_sets.data(), 0, nullptr);  //#UNI_BUFF
+
 
         // Bind Vertex buffer
         VkBuffer vertexBuffers[] = { m_VertexBuffer };

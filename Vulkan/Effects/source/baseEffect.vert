@@ -1,13 +1,13 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-layout(binding = 0) uniform SCamUniBuffer
+layout(set = 0, binding = 0) uniform SCamUniBuffer
 {
     mat4 view;
     mat4 proj;
 } cam_ubo;
 
-layout(binding = 3) uniform SObjUniBuffer
+layout(set = 1, binding = 0) uniform SObjUniBuffer
 {
     mat4 obj_world;
     float tex_mul;

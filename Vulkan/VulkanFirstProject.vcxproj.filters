@@ -95,6 +95,7 @@
     <ClInclude Include="Source\Utils\ShaderUtils.h">
       <Filter>Techs</Filter>
     </ClInclude>
+    <ClInclude Include="Source\DescriptorManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Utils\Timer.cpp">
@@ -156,6 +157,9 @@
     </ClCompile>
     <ClCompile Include="Source\Utils\ShaderUtils.cpp">
       <Filter>Techs</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\DescriptorManager.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
