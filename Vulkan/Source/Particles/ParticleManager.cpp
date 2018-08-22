@@ -24,7 +24,7 @@ bool CParticleManager::Init()
         m_VertexBufferMemory);
 
     // Init emitters buffers
-    uint techs = g_Engine->TechMgr()->TechniquesCount();
+    uint32_t techs = g_Engine->TechMgr()->TechniquesCount();
     m_Tech2Emi.resize(techs);
     m_Tech2PCount.resize(techs);
 
@@ -45,7 +45,7 @@ bool CParticleManager::Shutdown()
 
 void CParticleManager::Simulate()
 {
-    uint old_num = m_ParticlesNum;
+    uint32_t old_num = m_ParticlesNum;
 
     // Clear old counters
     m_ParticlesNum = 0;
@@ -78,7 +78,7 @@ void CParticleManager::UpdateBuffers()
     vkMapMemory(g_Engine->Device(), stagingBufferMemory, 0, bufferSize, 0, &data);
 
     size_t offset = 0;
-    for (uint i = 0; i < m_Tech2Emi.size(); i++)
+    for (uint32_t i = 0; i < m_Tech2Emi.size(); i++)
     {
         if (m_Tech2Emi[i].empty() || m_Tech2PCount[i] < 1)
             continue;
@@ -114,9 +114,9 @@ void CParticleManager::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
     if (m_ParticlesNum < 1)
         return;
 
-    uint offset = 0;
+    uint32_t offset = 0;
     auto tech_mgr = g_Engine->TechMgr();
-    for (uint i = 0; i < m_Tech2Emi.size(); i++)
+    for (uint32_t i = 0; i < m_Tech2Emi.size(); i++)
     {
         if (m_Tech2Emi[i].empty())
             continue;
@@ -135,7 +135,7 @@ void CParticleManager::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
         VkBuffer vertexBuffers[] = { m_VertexBuffer };
         VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(cmd_buff, 0, 1, vertexBuffers, offsets);
-        vkCmdDraw(cmd_buff, static_cast<uint32_t>(m_Tech2PCount[i]), 1, offset, 0);
+        vkCmdDraw(cmd_buff, (uint32_t)(m_Tech2PCount[i]), 1, offset, 0);
 
         offset += m_Tech2PCount[i];
     }
@@ -157,9 +157,9 @@ int CParticleManager::RegisterEmitter(IEmitter* emitter, int id /*= -1*/)
     {
         if (id >= m_Emitters.size())
         {
-            uint old_size = m_Emitters.size();
+            uint32_t old_size = m_Emitters.size();
             m_Emitters.resize(id + 1);
-            for (uint i = old_size; i < m_Emitters.size(); i++)
+            for (uint32_t i = old_size; i < m_Emitters.size(); i++)
             {
                 m_Emitters[i] = nullptr;
             }

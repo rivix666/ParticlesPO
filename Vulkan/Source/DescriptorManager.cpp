@@ -26,7 +26,7 @@ bool CDescriptorManager::CreateDescriptorPool(const uint32_t& max_sets)
 {
     VkDescriptorPoolCreateInfo poolInfo = {};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = static_cast<uint32_t>(m_PoolRegisteredSizes.size());
+    poolInfo.poolSizeCount = (uint32_t)(m_PoolRegisteredSizes.size());
     poolInfo.pPoolSizes = m_PoolRegisteredSizes.data();
     poolInfo.maxSets = max_sets;
 
@@ -75,7 +75,7 @@ bool CDescriptorManager::CreateDescriptorLayouts()
         // Create Description Layout
         VkDescriptorSetLayoutCreateInfo layoutInfo = {};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+        layoutInfo.bindingCount = (uint32_t)(bindings.size());
         layoutInfo.pBindings = bindings.data();
 
         if (VKRESULT(vkCreateDescriptorSetLayout(g_Engine->Device(), &layoutInfo, nullptr, &m_DescLays[i])))
@@ -181,7 +181,7 @@ bool CDescriptorManager::CreateDescriptorSets()
         // Update Descriptor Sets
         if (!descriptorWrites.empty())
         {
-            vkUpdateDescriptorSets(g_Engine->Device(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+            vkUpdateDescriptorSets(g_Engine->Device(), (uint32_t)(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
     }
 
@@ -333,6 +333,7 @@ void CDescriptorManager::ClearAllRegisteredData()
 }
 
 // Description Sets helper methods
+//////////////////////////////////////////////////////////////////////////
 void CDescriptorManager::PreparePlace4DescSets(const uint32_t& new_set_id)
 {
     if ((size_t)new_set_id >= m_DescData.size())
@@ -360,6 +361,7 @@ void CDescriptorManager::PreparePlace4Descriptors(const uint32_t& new_set_id, co
 }
 
 // Get Descriptor Buffer/Image Info
+//////////////////////////////////////////////////////////////////////////
 void CDescriptorManager::FetchDescriptorBufferInfo(const SDescSetData& data, std::vector<VkDescriptorBufferInfo>& out_vec)
 {
     size_t offset = 0;
@@ -387,6 +389,7 @@ void CDescriptorManager::FetchDescriptorImageInfo(const SDescSetData& data, std:
 }
 
 // Misc
+//////////////////////////////////////////////////////////////////////////
 void CDescriptorManager::ClearDescDataCount()
 {
     memset(m_DescDataCount, uint32_t(0), (size_t)(sizeof(uint32_t) * VkDescriptorType::VK_DESCRIPTOR_TYPE_RANGE_SIZE));

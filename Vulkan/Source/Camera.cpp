@@ -18,7 +18,7 @@ SCamMemento::SCamMemento(CCamera* cam)
 CCamera::CCamera()
 {
     // Init move keys states
-    for (uint i = 0; i < (uint)ECamMoveDir::_COUNT_; i++)
+    for (uint32_t i = 0; i < (uint32_t)ECamMoveDir::_COUNT_; i++)
         m_MoveDirKeyState[i] = false;
 
     // Init cam params
@@ -72,7 +72,7 @@ void CCamera::ProcessMouseMoveInput(float xoffset, float yoffset)
 
 void CCamera::MoveFreeCam(ECamMoveDir dir, bool state)
 {
-    m_MoveDirKeyState[(uint)dir] = state;
+    m_MoveDirKeyState[(uint32_t)dir] = state;
 }
 
 void CCamera::MoveYawPitchFreeCam(float xoffset, float yoffset)
@@ -155,17 +155,17 @@ void CCamera::UpdateFreeCamVectors()
 void CCamera::UpdateFreeCamPos()
 {
     float velocity = m_MoveSpeed * g_Engine->LastFrameTime();
-    if (m_MoveDirKeyState[(uint)ECamMoveDir::FORWARD])
+    if (m_MoveDirKeyState[(uint32_t)ECamMoveDir::FORWARD])
         m_Eye += m_View * velocity;
-    if (m_MoveDirKeyState[(uint)ECamMoveDir::BACKWARD])
+    if (m_MoveDirKeyState[(uint32_t)ECamMoveDir::BACKWARD])
         m_Eye -= m_View * velocity;
-    if (m_MoveDirKeyState[(uint)ECamMoveDir::RIGHT])
+    if (m_MoveDirKeyState[(uint32_t)ECamMoveDir::RIGHT])
         m_Eye += m_Right * velocity;
-    if (m_MoveDirKeyState[(uint)ECamMoveDir::LEFT])
+    if (m_MoveDirKeyState[(uint32_t)ECamMoveDir::LEFT])
         m_Eye -= m_Right * velocity;
-    if (m_MoveDirKeyState[(uint)ECamMoveDir::UP])
+    if (m_MoveDirKeyState[(uint32_t)ECamMoveDir::UP])
         m_Eye += m_Up * velocity;
-    if (m_MoveDirKeyState[(uint)ECamMoveDir::DOWN])
+    if (m_MoveDirKeyState[(uint32_t)ECamMoveDir::DOWN])
         m_Eye -= m_Up * velocity;
 }
 

@@ -46,8 +46,6 @@ public:
     CCamera();
     ~CCamera() = default;
 
-    typedef unsigned int uint; // #TYPEDEF_UINT czemu nei bierze z stdafx??
-
     // View / Position
     void Update();
 
@@ -137,5 +135,5 @@ private:
 
     // Misc
     bool m_UseFreeCam = true;
-    bool m_MoveDirKeyState[(uint)ECamMoveDir::_COUNT_];
+    bool m_MoveDirKeyState[(uint32_t)ECamMoveDir::_COUNT_];
 };

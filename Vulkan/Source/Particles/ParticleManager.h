@@ -10,8 +10,6 @@ public:
     CParticleManager();
     ~CParticleManager();
 
-    typedef unsigned int uint; // #TYPEDEF_UINT czemu nei bierze z stdafx??
-
     // Init/Release
     bool Init();
     bool Shutdown();
@@ -34,7 +32,7 @@ public:
     
     inline IEmitter* GetEmitter(int id) const;
 
-    typedef std::vector<uint> TUintVec;
+    typedef std::vector<uint32_t> TUintVec;
     typedef std::vector<IEmitter*> TEmiVec;
     typedef std::vector<TEmiVec> TTechEmiVec;
 
@@ -43,7 +41,7 @@ private:
     TEmiVec         m_Emitters;
     TUintVec        m_Tech2PCount;
     TTechEmiVec     m_Tech2Emi;
-    uint            m_ParticlesNum = 0;
+    uint32_t            m_ParticlesNum = 0;
 
     // Buffers
     VkBuffer        m_VertexBuffer = nullptr;

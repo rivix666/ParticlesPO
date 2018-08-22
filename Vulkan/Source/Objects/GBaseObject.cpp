@@ -3,7 +3,7 @@
 #include "../Techs/BaseTechnique.h"
 #include "../Techs/TechniqueManager.h"
 
-uint CGBaseObject::s_TechId = UINT_MAX;
+uint32_t CGBaseObject::s_TechId = UINT_MAX;
 
 CGBaseObject::CGBaseObject(const EBaseObjInitType& type)
     : m_Type(type)
@@ -116,12 +116,12 @@ size_t CGBaseObject::GetIndicesSize() const
     return GetIndexSize() * m_Indices.size();
 }
 
-uint CGBaseObject::GetIndicesCount() const
+uint32_t CGBaseObject::GetIndicesCount() const
 {
     return m_Indices.size();
 }
 
-uint CGBaseObject::GetVerticesCount() const
+uint32_t CGBaseObject::GetVerticesCount() const
 {
     return m_Vertices.size();
 }

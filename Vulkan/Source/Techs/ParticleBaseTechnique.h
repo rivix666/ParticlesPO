@@ -8,7 +8,7 @@ struct ParticleVertex
     glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f);
 
     float life = 0.0f;
-    // float burn, uint tech, float max_size, float frame
+    // float burn, uint32_t tech, float max_size, float frame
 
     static void GetBindingDescription(VkVertexInputBindingDescription& out_desc);
     static void GetAttributeDescriptions(std::vector<VkVertexInputAttributeDescription>& out_desc);

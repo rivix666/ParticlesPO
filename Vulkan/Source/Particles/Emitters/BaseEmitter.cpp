@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "BaseEmitter.h"
 
-CBaseEmitter::CBaseEmitter(uint tech_id, uint buff_size)
+CBaseEmitter::CBaseEmitter(uint32_t tech_id, uint32_t buff_size)
     : IEmitter(tech_id)
     , m_BuffSize(buff_size)
 {
@@ -12,9 +12,9 @@ CBaseEmitter::~CBaseEmitter()
 {
 }
 
-void CBaseEmitter::Emit(uint count)
+void CBaseEmitter::Emit(uint32_t count)
 {
-    for (uint i = 0; i < count && m_UsedParticles <= m_BuffSize; i++)
+    for (uint32_t i = 0; i < count && m_UsedParticles <= m_BuffSize; i++)
     {
         ParticleVertex particle;
         particle.life = 1.0f;
@@ -25,14 +25,14 @@ void CBaseEmitter::Emit(uint count)
 
 void CBaseEmitter::Simulate()
 {
-    for (uint i = 0; i < m_UsedParticles; i++)
+    for (uint32_t i = 0; i < m_UsedParticles; i++)
     {
         m_Particles[i].life -= 0.0001f;
         m_Particles[i].life = m_Particles[i].life < 0.0f ? 0.0f : m_Particles[i].life;
     }
 }
 
-uint CBaseEmitter::ParticlesCount() const
+uint32_t CBaseEmitter::ParticlesCount() const
 {
     return m_UsedParticles;
 }

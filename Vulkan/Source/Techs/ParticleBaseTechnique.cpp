@@ -172,7 +172,7 @@ void CParticleBaseTechnique::GetVertexInputDesc(VkPipelineVertexInputStateCreate
     // Fill vertex input info
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertexInputInfo.vertexBindingDescriptionCount = 1;
-    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(m_AttributesDesc.size());
+    vertexInputInfo.vertexAttributeDescriptionCount = (uint32_t)(m_AttributesDesc.size());
     vertexInputInfo.pVertexBindingDescriptions = &m_BindingDesc;
     vertexInputInfo.pVertexAttributeDescriptions = m_AttributesDesc.data();
 }

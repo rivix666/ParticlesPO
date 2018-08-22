@@ -19,15 +19,15 @@ void CTechniqueManager::Shutdown()
     }
 }
 
-uint CTechniqueManager::RegisterTechnique(ITechnique* tech)
+uint32_t CTechniqueManager::RegisterTechnique(ITechnique* tech)
 {
     m_Techniques.push_back(tech);
     return m_Techniques.size() - 1;
 }
 
-uint CTechniqueManager::RegisterTechnique(const std::string& lay_name, ITechnique* tech)
+uint32_t CTechniqueManager::RegisterTechnique(const std::string& lay_name, ITechnique* tech)
 {
-    uint res = RegisterTechnique(tech);
+    uint32_t res = RegisterTechnique(tech);
     m_LayToTech[lay_name].push_back(res);
     return res;
 }
@@ -46,7 +46,7 @@ bool CTechniqueManager::UnregisterTechnique(ITechnique* tech)
     return true;
 }
 
-bool CTechniqueManager::UnregisterTechnique(uint tech_id)
+bool CTechniqueManager::UnregisterTechnique(uint32_t tech_id)
 {
     if (tech_id >= m_Techniques.size())
         return false;
@@ -70,7 +70,7 @@ bool CTechniqueManager::DeleteTechnique(ITechnique* tech)
     return true;
 }
 
-bool CTechniqueManager::DeleteTechnique(uint tech_id)
+bool CTechniqueManager::DeleteTechnique(uint32_t tech_id)
 {
     if (tech_id >= m_Techniques.size())
         return false;
@@ -87,12 +87,12 @@ bool CTechniqueManager::DeleteTechnique(uint tech_id)
     return true;
 }
 
-uint CTechniqueManager::TechniquesCount() const
+uint32_t CTechniqueManager::TechniquesCount() const
 {
     return m_Techniques.size();
 }
 
-// uint CTechniqueManager::GetTechIdByLayoutName(const std::string& lay_name) const
+// uint32_t CTechniqueManager::GetTechIdByLayoutName(const std::string& lay_name) const
 // {
 //     auto it = m_LayToTech.find(lay_name);
 //     if (it != m_LayToTech.end())
@@ -102,7 +102,7 @@ uint CTechniqueManager::TechniquesCount() const
 //     return UINT_MAX;
 // }
 
-ITechnique* CTechniqueManager::GetTechnique(const uint& tech_id) const
+ITechnique* CTechniqueManager::GetTechnique(const uint32_t& tech_id) const
 {
     return m_Techniques[tech_id];
 }

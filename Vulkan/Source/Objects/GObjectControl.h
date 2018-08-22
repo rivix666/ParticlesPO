@@ -16,7 +16,6 @@ public:
     ~CGObjectControl();
 
     // Typedefs
-    typedef unsigned int uint; // #TYPEDEF_UINT czemu nei bierze z stdafx?? cos z dodaniuem includow do headera engine?
     typedef std::vector<size_t> TCacheVec;
     typedef std::vector<IGObject*> TObjectsVec;
     typedef std::vector<TObjectsVec> TTech2ObjVec;
@@ -24,9 +23,9 @@ public:
     void Shutdown();
 
     void RegisterObject(IGObject* obj);
-    void RegisterObject(const uint& tech, IGObject* obj);
+    void RegisterObject(const uint32_t& tech, IGObject* obj);
     void UnregisterObject(IGObject* obj);
-    void UnregisterObject(const uint& tech, IGObject* obj);
+    void UnregisterObject(const uint32_t& tech, IGObject* obj);
 
     void RecordCommandBuffer(VkCommandBuffer& cmd_buff);
 
@@ -35,7 +34,7 @@ public:
     const TTech2ObjVec& GetTech2ObjVec() const { return m_TechToObjVec; }
 
 private:
-    void EnsureTechIdWillFit(const uint& tech_id);
+    void EnsureTechIdWillFit(const uint32_t& tech_id);
 
     // Device
     VkDevice m_Device = nullptr;

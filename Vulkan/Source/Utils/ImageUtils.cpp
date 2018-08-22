@@ -57,18 +57,18 @@ bool image_utils::CreateTextureImage(SImageParams& params)
         bufferCopyRegion.imageSubresource.mipLevel = i;
         bufferCopyRegion.imageSubresource.baseArrayLayer = 0;
         bufferCopyRegion.imageSubresource.layerCount = 1;
-        bufferCopyRegion.imageExtent.width = static_cast<uint32_t>(tex_data[i].extent().x);
-        bufferCopyRegion.imageExtent.height = static_cast<uint32_t>(tex_data[i].extent().y);
+        bufferCopyRegion.imageExtent.width = (uint32_t)(tex_data[i].extent().x);
+        bufferCopyRegion.imageExtent.height = (uint32_t)(tex_data[i].extent().y);
         bufferCopyRegion.imageExtent.depth = 1;
         bufferCopyRegion.bufferOffset = offset;
 
         bufferCopyRegions.push_back(bufferCopyRegion);
-        offset += static_cast<uint32_t>(tex_data[i].size());
+        offset += (uint32_t)(tex_data[i].size());
     }
 
     // Copy texture from staging buffer into newly created image
     VkCommandBuffer commandBuffer = g_Engine->Renderer()->BeginSingleTimeCommands();
-    vkCmdCopyBufferToImage(commandBuffer, stagingBuffer, params.out_texture_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32_t>(bufferCopyRegions.size()), bufferCopyRegions.data());
+    vkCmdCopyBufferToImage(commandBuffer, stagingBuffer, params.out_texture_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, (uint32_t)(bufferCopyRegions.size()), bufferCopyRegions.data());
     g_Engine->Renderer()->EndSingleTimeCommands(commandBuffer);
 
     // Release staging buffer and texture

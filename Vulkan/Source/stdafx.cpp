@@ -25,7 +25,7 @@ namespace utils
 
     double CalcSPF()
     {
-        static uint idx = 0;
+        static uint32_t idx = 0;
         static double acc = 0.0;
         static double last = 0.0;
         static CTimer spf_timer(ETimerType::MiliSeconds);

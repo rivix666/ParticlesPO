@@ -7,7 +7,7 @@
 CGObjectControl::CGObjectControl(VkDevice device)
     : m_Device(device)
 {
-    uint tech_count = g_Engine->TechMgr()->TechniquesCount();
+    uint32_t tech_count = g_Engine->TechMgr()->TechniquesCount();
     m_TechToObjVec.resize(tech_count);
     m_SizeCacheVec.resize(tech_count);
 }
@@ -18,8 +18,8 @@ CGObjectControl::~CGObjectControl()
 
 void CGObjectControl::Shutdown()
 {
-    uint tech_count = m_TechToObjVec.size();
-    for (uint i = 0; i < tech_count; i++)
+    uint32_t tech_count = m_TechToObjVec.size();
+    for (uint32_t i = 0; i < tech_count; i++)
     {
         for (auto obj : m_TechToObjVec[i])
             SAFE_DELETE(obj);
@@ -33,7 +33,7 @@ void CGObjectControl::RegisterObject(IGObject* obj)
     RegisterObject(obj->TechniqueId(), obj);
 }
 
-void CGObjectControl::RegisterObject(const uint& tech, IGObject* obj)
+void CGObjectControl::RegisterObject(const uint32_t& tech, IGObject* obj)
 {
     if (!obj)
         return;
@@ -53,7 +53,7 @@ void CGObjectControl::RegisterObject(const uint& tech, IGObject* obj)
     obj->InitPhysXObj();
 }
 
-void CGObjectControl::UnregisterObject(const uint& tech, IGObject* obj)
+void CGObjectControl::UnregisterObject(const uint32_t& tech, IGObject* obj)
 {
     if (tech >= m_TechToObjVec.size() || !obj)
         return;
@@ -77,13 +77,13 @@ void CGObjectControl::UnregisterObject(IGObject* obj)
 void CGObjectControl::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
 {
     auto tech_mgr = g_Engine->TechMgr();
-    uint tech_count = m_TechToObjVec.size();
-    for (uint i = 0; i < tech_count; i++)
+    uint32_t tech_count = m_TechToObjVec.size();
+    for (uint32_t i = 0; i < tech_count; i++)
     {
         auto tech = tech_mgr->GetTechnique(i);
         vkCmdBindPipeline(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipeline());
 
-        for (uint j = 0; j < m_TechToObjVec[i].size(); j++)
+        for (uint32_t j = 0; j < m_TechToObjVec[i].size(); j++)
         {
             auto obj = m_TechToObjVec[i][j];
             if (!obj->VertexBuffer())
@@ -105,12 +105,12 @@ void CGObjectControl::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
             {
                 vkCmdBindIndexBuffer(cmd_buff, obj->IndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
                 vkCmdBindDescriptorSets(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipelineLayout(), 0, (uint32_t)desc_sets.size(), desc_sets.data(), 1, &uni_offset);  //#UNI_BUFF
-                vkCmdDrawIndexed(cmd_buff, static_cast<uint32_t>(obj->GetIndicesCount()), 1, 0, 0, 0);
+                vkCmdDrawIndexed(cmd_buff, (uint32_t)(obj->GetIndicesCount()), 1, 0, 0, 0);
             }
             else
             {
                 vkCmdBindDescriptorSets(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipelineLayout(), 0, (uint32_t)desc_sets.size(), desc_sets.data(), 1, &uni_offset);  //#UNI_BUFF
-                vkCmdDraw(cmd_buff, static_cast<uint32_t>(obj->GetVerticesCount()), 1, 0, 0);
+                vkCmdDraw(cmd_buff, (uint32_t)(obj->GetVerticesCount()), 1, 0, 0);
             }
         }
     }
@@ -121,7 +121,7 @@ void CGObjectControl::UpdateUniBuffers()
     size_t minUboAlignment = g_Engine->Renderer()->MinUboAlignment();
 
     // Update Uni buffers
-    for (uint tech_id = 0; tech_id < m_TechToObjVec.size(); tech_id++)
+    for (uint32_t tech_id = 0; tech_id < m_TechToObjVec.size(); tech_id++)
     {
         uint8_t* pData;
         auto uni_buff_mem = g_Engine->TechMgr()->GetTechnique(tech_id)->UniBufferMemory();
@@ -130,7 +130,7 @@ void CGObjectControl::UpdateUniBuffers()
             continue;
 
         vkMapMemory(g_Engine->Device(), uni_buff_mem, 0, single_obj_size * m_TechToObjVec[tech_id].size(), 0, (void **)&pData);
-        for (uint obj_id = 0; obj_id < m_TechToObjVec[tech_id].size(); obj_id++)
+        for (uint32_t obj_id = 0; obj_id < m_TechToObjVec[tech_id].size(); obj_id++)
         {
             void* obj_data = m_TechToObjVec[tech_id][obj_id]->GetUniBuffData();
             if (obj_data)
@@ -151,7 +151,7 @@ void CGObjectControl::UpdateUniBuffers()
     }
 }
 
-void CGObjectControl::EnsureTechIdWillFit(const uint& tech_id)
+void CGObjectControl::EnsureTechIdWillFit(const uint32_t& tech_id)
 {
     if (m_TechToObjVec.size() <= tech_id)
     {

@@ -83,8 +83,6 @@
     OutputDebugString(ws.str().c_str());    \
 }
 
-typedef unsigned int uint;
-
 extern CEngine* g_Engine;
 
 namespace utils
@@ -93,8 +91,8 @@ namespace utils
     template<typename T>
     void DeletePtrVec(T& vec)
     {
-        uint count = vec.size();
-        for (uint i = 0; i < count; i++)
+        uint32_t count = vec.size();
+        for (uint32_t i = 0; i < count; i++)
         {
             SAFE_DELETE(vec[i]);
         }

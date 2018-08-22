@@ -277,7 +277,7 @@ void CVulkanRenderer::RecreateCommandBuffer()
     }
 
     // #CMD_BUFF_RESET to w koncu free czy reset -.-?
-    vkFreeCommandBuffers(m_Device, m_CommandPool, static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
+    vkFreeCommandBuffers(m_Device, m_CommandPool, (uint32_t)(m_CommandBuffers.size()), m_CommandBuffers.data());
     CreateCommandBuffers();
 }
 
@@ -325,7 +325,7 @@ bool CVulkanRenderer::GetRequiredExtensions()
         m_InstanceExtCount++;
         LogD("\\Required extensions:\n");
         LogD("-------------------------------------------------------------\n");
-        for (uint i = 0; i < m_InstanceExtCount; i++)
+        for (uint32_t i = 0; i < m_InstanceExtCount; i++)
         {
             LogD(m_ReqInstanceExt[i]);
             LogD("\n");
@@ -431,7 +431,7 @@ bool CVulkanRenderer::InitVkInstance()
     createInfo.pNext = nullptr;
     createInfo.flags = 0;
     createInfo.pApplicationInfo = &appInfo;
-    createInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
+    createInfo.enabledLayerCount = (uint32_t)(m_ValidationLayers.size());
     createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
     createInfo.enabledExtensionCount = m_InstanceExtCount;
     createInfo.ppEnabledExtensionNames = m_ReqInstanceExt.data();
@@ -627,7 +627,7 @@ void CVulkanRenderer::CleanupSwapChain()
     for (auto framebuffer : m_SwapChainFramebuffersVec)
         vkDestroyFramebuffer(m_Device, framebuffer, nullptr);
 
-    vkFreeCommandBuffers(m_Device, m_CommandPool, static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
+    vkFreeCommandBuffers(m_Device, m_CommandPool, (uint32_t)(m_CommandBuffers.size()), m_CommandBuffers.data());
 
     if (g_Engine->TechMgr())
         g_Engine->TechMgr()->ShutdownTechniques(); // shutdown graphics pipelines
@@ -1073,18 +1073,18 @@ bool CVulkanRenderer::CreateRenderPass()
     //////////////////////////////////////////////////////////////////////////
     VkRenderPassCreateInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+    renderPassInfo.attachmentCount = (uint32_t)(attachments.size());
     renderPassInfo.pAttachments = attachments.data();
-    renderPassInfo.subpassCount = static_cast<uint32_t>(subpasses.size());
+    renderPassInfo.subpassCount = (uint32_t)(subpasses.size());
     renderPassInfo.pSubpasses = subpasses.data();
-    renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+    renderPassInfo.dependencyCount = (uint32_t)(dependencies.size());
     renderPassInfo.pDependencies = dependencies.data();
 
     if (vkCreateRenderPass(m_Device, &renderPassInfo, nullptr, &m_RenderPass) != VK_SUCCESS) 
         return utils::FatalError(g_Engine->Hwnd(), "Failed to create render pass");
 
     // Store subpasses number
-    m_SubpassesCount = static_cast<uint32_t>(subpasses.size());
+    m_SubpassesCount = (uint32_t)(subpasses.size());
 
     return true;
 }
@@ -1104,7 +1104,7 @@ bool CVulkanRenderer::CreateFramebuffers()
         VkFramebufferCreateInfo framebufferInfo = {};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebufferInfo.renderPass = m_RenderPass;
-        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        framebufferInfo.attachmentCount = (uint32_t)(attachments.size());
         framebufferInfo.pAttachments = attachments.data();
         framebufferInfo.width = m_SwapChainExtent.width;
         framebufferInfo.height = m_SwapChainExtent.height;
@@ -1172,7 +1172,7 @@ bool CVulkanRenderer::CreateCommandBuffers()
         std::array<VkClearValue, 2> clearValues = {};
         clearValues[0].color = { 0.45f, 0.45f, 0.45f, 1.0f };
         clearValues[1].depthStencil = { 1.0f, 0 };
-        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.clearValueCount = (uint32_t)(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
 
         uint32_t current_subpass = 0;
@@ -1248,14 +1248,14 @@ bool CVulkanRenderer::CreateLogicalDevice()
 
     VkDeviceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+    createInfo.queueCreateInfoCount = (uint32_t)(queueCreateInfos.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.pEnabledFeatures = &deviceFeatures;
-    createInfo.enabledExtensionCount = static_cast<uint32_t>(m_ReqDeviceExt.size());
+    createInfo.enabledExtensionCount = (uint32_t)(m_ReqDeviceExt.size());
     createInfo.ppEnabledExtensionNames = m_ReqDeviceExt.data();
 
 #ifdef _DEBUG
-    createInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
+    createInfo.enabledLayerCount = (uint32_t)(m_ValidationLayers.size());
     createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
 #else
     createInfo.enabledLayerCount = 0;

@@ -4,16 +4,16 @@
 class IEmitter
 {
 public:
-    IEmitter(uint tech_id);
+    IEmitter(uint32_t tech_id);
 
     // Emit given number of particles
-    virtual void Emit(uint count) = 0;
+    virtual void Emit(uint32_t count) = 0;
 
     // Advance particles simulation
     virtual void Simulate() = 0;
 
     // Getters/Setters
-    virtual uint ParticlesCount() const = 0;
+    virtual uint32_t ParticlesCount() const = 0;
     virtual size_t ParticlesSize() const = 0;
     virtual void* ParticlesData() = 0;
 
@@ -22,11 +22,11 @@ public:
     const glm::vec3& Pos() const { return m_Pos; }
     void SetPos(const glm::vec3& pos) { m_Pos = pos; }
 
-    uint TechId() const { return m_TechId; }
+    uint32_t TechId() const { return m_TechId; }
 
 protected:
     // Tech Id
-    uint m_TechId = UINT_MAX;
+    uint32_t m_TechId = UINT_MAX;
 
     // Emitter position
     glm::vec3 m_Pos;

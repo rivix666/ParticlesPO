@@ -31,14 +31,14 @@ public:
     size_t   GetIndexSize() const override;
     size_t   GetIndicesSize() const override;
 
-    uint     GetIndicesCount() const override;
-    uint     GetVerticesCount() const override;
+    uint32_t     GetIndicesCount() const override;
+    uint32_t     GetVerticesCount() const override;
     void*    GetVerticesPtr() override;
     void*    GetIndicesPtr() override;
 
     void*    GetUniBuffData() override;
 
-    static uint s_TechId; //#TECH keipskie rozwiazanie ale na razie na szybko jest
+    static uint32_t s_TechId; //#TECH keipskie rozwiazanie ale na razie na szybko jest
 
 protected:
     void InitVectors(const EBaseObjInitType& type);

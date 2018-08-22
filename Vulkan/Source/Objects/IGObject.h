@@ -19,8 +19,6 @@ public:
     IGObject(const SObjMtxInitParams& params);
     ~IGObject();
 
-    typedef unsigned int uint; // #TYPEDEF_UINT czemu nei bierze z stdafx?? //#TYPEDEF_UINT zamienic wszystkie moje uinty na uint32_t
-
     // Init PhysX
     virtual bool InitPhysXObj() { return true; }
     virtual void ShutdownPhysXObj() {}
@@ -30,16 +28,16 @@ public:
     virtual size_t GetVerticesSize() const = 0;
     virtual size_t GetIndexSize() const = 0;
     virtual size_t GetIndicesSize() const = 0;
-    virtual uint   GetIndicesCount() const = 0;
-    virtual uint   GetVerticesCount() const = 0;
+    virtual uint32_t   GetIndicesCount() const = 0;
+    virtual uint32_t   GetVerticesCount() const = 0;
 
     virtual void*  GetVerticesPtr() = 0;
     virtual void*  GetIndicesPtr() = 0;
 
     virtual void*  GetUniBuffData() { return nullptr; };
 
-    void SetTechId(uint tech_id) { m_TechId = tech_id; }
-    uint TechniqueId() const { return m_TechId; }
+    void SetTechId(uint32_t tech_id) { m_TechId = tech_id; }
+    uint32_t TechniqueId() const { return m_TechId; }
 
     void SetWorldMtx(const glm::mat4& mtx) { m_WorldMtx = mtx; }
     const glm::mat4& WorldMtx() const { return m_WorldMtx; }
@@ -61,7 +59,7 @@ public:
 
 protected:
     // Object Tech Id
-    uint m_TechId = UINT_MAX;
+    uint32_t m_TechId = UINT_MAX;
 
     // Matrix
     glm::mat4 m_WorldMtx = glm::mat4(1.0f);
