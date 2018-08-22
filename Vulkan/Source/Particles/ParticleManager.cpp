@@ -4,10 +4,6 @@
 #include "../Techs/TechniqueManager.h"
 #include "../DescriptorManager.h"
 
-CParticleManager::CParticleManager()
-{
-}
-
 CParticleManager::~CParticleManager()
 {
     utils::DeletePtrVec(m_Emitters);
@@ -127,9 +123,12 @@ void CParticleManager::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
         vkCmdBindPipeline(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipeline());
 
         // Bind Descriptor Sets
-        std::vector<VkDescriptorSet> desc_sets = { g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::GENERAL), g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::PARTICLES) };
+        std::vector<VkDescriptorSet> desc_sets = { 
+            g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::GENERAL), 
+            g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::PARTICLES),
+            g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::DEPTH)
+        };
         vkCmdBindDescriptorSets(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipelineLayout(), 0, (uint32_t)desc_sets.size(), desc_sets.data(), 0, nullptr);  //#UNI_BUFF
-
 
         // Bind Vertex buffer
         VkBuffer vertexBuffers[] = { m_VertexBuffer };
@@ -201,4 +200,103 @@ int CParticleManager::FindEmitterId(IEmitter* emitter) const
 IEmitter* CParticleManager::GetEmitter(int id) const
 {
     return m_Emitters[id];
+}
+
+bool CParticleManager::CreateUniBuffers()
+{
+    // Create Uni Buffers
+    PrepareVectors();
+    for (uint32_t i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
+    {
+        if (!CreateTechUniBuffer(i))
+            return false;
+    }
+
+    // Register as Descriptors
+    if (!RegisterUniBuffs())
+        return false;
+
+    return true;
+}
+
+void CParticleManager::PrepareVectors()
+{
+    if (!m_UniBuffs.empty())
+    {
+        ReleaseUniBuffers();
+    }
+
+    m_UniBuffs.resize((size_t)g_Engine->TechMgr()->TechniquesCount());
+    m_UniBuffsMem.resize((size_t)g_Engine->TechMgr()->TechniquesCount());
+}
+
+bool CParticleManager::CreateTechUniBuffer(const uint32_t& tech_id)
+{
+    // Create Buffer
+    size_t minUboAlignment = g_Engine->Renderer()->MinUboAlignment();
+    double size = ceil((double)sizeof(SParticleTechUniBuffer) / (double)minUboAlignment);
+    VkDeviceSize bufferSize = minUboAlignment * size * g_Engine->TechMgr()->TechniquesCount();
+
+    if (!g_Engine->Renderer()->CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_UniBuffs[tech_id], m_UniBuffsMem[tech_id]))
+        return false;
+
+    SParticleTechUniBuffer ub = {};
+    FetchTechUboData(tech_id, ub);
+
+    // Copy Data into it
+    void* data;
+    vkMapMemory(g_Engine->Device(), m_UniBuffsMem[tech_id], 0, sizeof(ub), 0, &data);
+    memcpy(data, &ub, sizeof(ub));
+    vkUnmapMemory(g_Engine->Device(), m_UniBuffsMem[tech_id]);
+    return true;
+}
+
+void CParticleManager::FetchTechUboData(const uint32_t& tech_id, SParticleTechUniBuffer& out)
+{
+    auto pbt = dynamic_cast<CParticleBaseTechnique*>(g_Engine->TechMgr()->GetTechnique(tech_id));
+    if (pbt)
+    {
+        out = pbt->GetParticleUniBuffData();
+    }
+}
+
+void CParticleManager::ReleaseUniBuffers()
+{
+    for (auto& ubo : m_UniBuffs)
+    {
+        if (ubo)
+        {
+            vkDestroyBuffer(g_Engine->Renderer()->GetDevice(), ubo, nullptr);
+        }
+    }
+
+    for (auto& mem : m_UniBuffsMem)
+    {
+        if (mem)
+        {
+            vkFreeMemory(g_Engine->Renderer()->GetDevice(), mem, nullptr);
+        }
+    }
+}
+
+bool CParticleManager::RegisterUniBuffs()
+{
+    // Store sizes of individual elements
+    size_t offset = 0;
+    std::vector<size_t> sizes;
+    for (size_t i = 0; i < g_Engine->TechMgr()->TechniquesCount(); i++)
+    {
+        sizes.push_back(g_Engine->Renderer()->GetUniBuffObjSize(sizeof(SParticleTechUniBuffer)));
+    }
+
+    // Register images array in Descriptor Set
+    if (!g_Engine->Renderer()->DescMgr()->RegisterDescriptor(
+        m_UniBuffs, sizes,
+        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+        (uint32_t)EDescSetRole::PARTICLES,
+        g_Engine->Renderer()->DescMgr()->GetNextFreeLocationId((uint32_t)EDescSetRole::PARTICLES)))
+        return false;
+
+    return true;
 }

@@ -95,7 +95,7 @@ void CGObjectControl::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
             vkCmdBindVertexBuffers(cmd_buff, 0, 1, vertexBuffers, offsets);
 
             // Prepare uni buff offset
-            uint32_t uni_offset = tech->GetUniBuffObjOffset() * j;
+            uint32_t uni_offset = g_Engine->Renderer()->GetUniBuffObjSize(tech->GetSingleUniBuffObjSize()) * j;
 
             // Prepare Descriptor Sets vector
             std::vector<VkDescriptorSet> desc_sets = { g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::GENERAL), g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::OBJECTS) };
@@ -145,7 +145,7 @@ void CGObjectControl::UpdateUniBuffers()
                 LogD(obj_id);
                 LogD("\n");
             }
-            pData += g_Engine->TechMgr()->GetTechnique(tech_id)->GetUniBuffObjOffset();
+            pData += g_Engine->Renderer()->GetUniBuffObjSize(g_Engine->TechMgr()->GetTechnique(tech_id)->GetSingleUniBuffObjSize());
         }
         vkUnmapMemory(g_Engine->Device(), uni_buff_mem);
     }

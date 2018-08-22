@@ -11,7 +11,7 @@ public:
     void Emit(uint32_t count) override;
 
     // Advance particles simulation
-    void Simulate() override;
+    void Simulate() override; // #PARTICLES jeden bazowy emitter a symulacje oddelegowac do technik??
 
     // Getters/Setters
     uint32_t ParticlesCount() const override;

@@ -172,6 +172,12 @@ void CVulkanRenderer::Render()
 #endif
 }
 
+size_t CVulkanRenderer::GetUniBuffObjSize(const size_t& obj_size) const
+{
+    size_t minUboAlignment = g_Engine->Renderer()->MinUboAlignment();
+    return (obj_size + minUboAlignment - 1) & ~(minUboAlignment - 1);
+}
+
 CDescriptorManager* CVulkanRenderer::DescMgr() const
 {
     return m_DescMgr;
@@ -716,6 +722,12 @@ bool CVulkanRenderer::CreateTechsRenderObjects()
         if (!tech->CreateRenderObjects())
             return false;
     }
+
+    // Initialize Particle Texture Manager
+    g_Engine->ParticleTexMgr()->Init();
+
+    // Initialize Particle Manager Uniform Buffers
+    g_Engine->ParticleMgr()->CreateUniBuffers();
     return true;
 }
 
@@ -734,10 +746,46 @@ void CVulkanRenderer::DestroyTechsRenderObjects()
 
 bool CVulkanRenderer::CreateDepthResources()
 {
+    // Create Depth Image
     VkFormat depthFormat = FindDepthFormat();
     image_utils::CreateImage(m_SwapChainExtent.width, m_SwapChainExtent.height, 1, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_DepthImage, m_DepthImageMemory);
+    
+    // Create Depth Image View
     m_DepthImageView = image_utils::CreateImageView(m_DepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
     image_utils::TransitionImageLayout(m_DepthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
+
+    // Create Depth Texture Sampler
+    VkSamplerCreateInfo samplerInfo = {};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_LINEAR;
+    samplerInfo.minFilter = VK_FILTER_LINEAR;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.anisotropyEnable = VK_FALSE;
+    samplerInfo.maxAnisotropy = 1;
+    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.minLod = 0; // Optional
+    samplerInfo.maxLod = 1.0f;
+    samplerInfo.mipLodBias = 0; // Optional
+
+    if (VKRESULT(vkCreateSampler(g_Engine->Renderer()->GetDevice(), &samplerInfo, nullptr, &m_DepthSampler)))
+        return utils::FatalError(g_Engine->Hwnd(), "Failed to create texture sampler");
+
+    // Register Depth View in Particles Descriptor Set
+    std::vector<ITechnique::TImgSampler> depth_pairs = { ITechnique::TImgSampler(g_Engine->Renderer()->GetDepthView(), m_DepthSampler) };
+    if (!g_Engine->Renderer()->DescMgr()->RegisterDescriptor(
+        depth_pairs, {},
+        VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+        VK_SHADER_STAGE_FRAGMENT_BIT,
+        (uint32_t)EDescSetRole::DEPTH,
+        g_Engine->Renderer()->DescMgr()->GetNextFreeLocationId((uint32_t)EDescSetRole::DEPTH)))
+        return false;
+
     return true;
 }
 
@@ -973,7 +1021,7 @@ bool CVulkanRenderer::CreateRenderPass()
 {
     // Attachment description
     //////////////////////////////////////////////////////////////////////////
-    std::array<VkAttachmentDescription, 3> attachments;
+    std::array<VkAttachmentDescription, 2> attachments;
 
     // Color attachment
     attachments[0] = {};
@@ -998,18 +1046,6 @@ bool CVulkanRenderer::CreateRenderPass()
     attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-    // Depth attachment - second subpass //#DEPTH mozliwe ze nie ebdzie potrzebne, wszystko zalezy od tego czy bede potrzebowac depth buffer w drugim subpassie
-    attachments[2] = {};
-    attachments[2].format = FindDepthFormat();
-    attachments[2].flags = VK_ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT;
-    attachments[2].samples = VK_SAMPLE_COUNT_1_BIT;
-    attachments[2].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-    attachments[2].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attachments[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    attachments[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attachments[2].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    attachments[2].finalLayout = VK_IMAGE_LAYOUT_GENERAL;
-
     // Attachments references
     //////////////////////////////////////////////////////////////////////////
     VkAttachmentReference colorAttachmentRef = {};
@@ -1020,14 +1056,10 @@ bool CVulkanRenderer::CreateRenderPass()
     depthAttachmentRef_first.attachment = 1;
     depthAttachmentRef_first.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-    VkAttachmentReference depthAttachmentRef_second = {};
-    depthAttachmentRef_second.attachment = 1;
-    depthAttachmentRef_second.layout = VK_IMAGE_LAYOUT_GENERAL; // If we want to use depth buffer as input and output in the same time, It attachment references need to be palced in the same layout
-
     // Input references
     VkAttachmentReference depthInputAttachmentRef = {};
-    depthInputAttachmentRef.attachment = 2;
-    depthInputAttachmentRef.layout = VK_IMAGE_LAYOUT_GENERAL;
+    depthInputAttachmentRef.attachment = 1;
+    depthInputAttachmentRef.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     // Subpasses description
     //////////////////////////////////////////////////////////////////////////
@@ -1045,7 +1077,6 @@ bool CVulkanRenderer::CreateRenderPass()
     subpasses[1].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpasses[1].colorAttachmentCount = 1;
     subpasses[1].pColorAttachments = &colorAttachmentRef;
-    subpasses[1].pDepthStencilAttachment = &depthAttachmentRef_second; //#DEPTH
     subpasses[1].inputAttachmentCount = 1;
     subpasses[1].pInputAttachments = &depthInputAttachmentRef;
 
@@ -1094,11 +1125,10 @@ bool CVulkanRenderer::CreateFramebuffers()
     m_SwapChainFramebuffersVec.resize(m_SwapChainImageViewsVec.size());
     for (size_t i = 0; i < m_SwapChainImageViewsVec.size(); i++)
     {
-        std::array<VkImageView, 3> attachments = 
+        std::array<VkImageView, 2> attachments = 
         {
             m_SwapChainImageViewsVec[i],
-            m_DepthImageView,
-            m_DepthImageView //#DEPTH
+            m_DepthImageView
         };
 
         VkFramebufferCreateInfo framebufferInfo = {};

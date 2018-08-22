@@ -24,7 +24,6 @@ public:
     // UniBuff getters          // #TECHS Should allow use uni buffers arrays
     virtual VkBuffer            UniBuffer() const { return nullptr; }
     virtual VkDeviceMemory      UniBufferMemory() const { return nullptr; }
-    virtual size_t              GetUniBuffObjOffset() const;
     virtual size_t              GetSingleUniBuffObjSize() const { return 0; }
 
     // Image getters

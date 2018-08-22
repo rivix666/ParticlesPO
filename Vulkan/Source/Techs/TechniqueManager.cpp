@@ -21,6 +21,9 @@ void CTechniqueManager::Shutdown()
 
 uint32_t CTechniqueManager::RegisterTechnique(ITechnique* tech)
 {
+    if (m_Techniques.size() >= TECH_MAX)
+        return UINT32_MAX;
+
     m_Techniques.push_back(tech);
     return m_Techniques.size() - 1;
 }

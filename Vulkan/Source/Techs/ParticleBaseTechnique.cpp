@@ -27,6 +27,14 @@ void ParticleVertex::GetAttributeDescriptions(std::vector<VkVertexInputAttribute
     life_desc.format = VK_FORMAT_R32_SFLOAT;
     life_desc.offset = offsetof(ParticleVertex, life);
     out_desc.push_back(life_desc);
+
+    // TechId
+    VkVertexInputAttributeDescription tech_id_desc = {};
+    life_desc.binding = 0;
+    life_desc.location = 2;
+    life_desc.format = VK_FORMAT_R32_SINT;
+    life_desc.offset = offsetof(ParticleVertex, tech_id);
+    out_desc.push_back(life_desc);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -35,107 +43,13 @@ CParticleBaseTechnique::CParticleBaseTechnique()
 {
 }
 
-void CParticleBaseTechnique::GetImageSamplerPairs(std::vector<TImgSampler>& out_pairs) const
-{
-    out_pairs.push_back(TImgSampler(m_TextureImageView, m_TextureSampler));
-}
-
 bool CParticleBaseTechnique::CreateRenderObjects()
 {
-    if (!LoadImage())
-        return false;
-
-    if (!CreateImageView())
-        return false;
-
-    if (!CreateTextureSampler())
-        return false;
-
-    // Register images in Descriptor Set
-    std::vector<TImgSampler> img_pairs = { TImgSampler(m_TextureImageView, m_TextureSampler) };
-    if (!g_Engine->Renderer()->DescMgr()->RegisterDescriptor(
-        img_pairs, {},
-        VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-        VK_SHADER_STAGE_FRAGMENT_BIT,
-        (uint32_t)EDescSetRole::PARTICLES,
-        g_Engine->Renderer()->DescMgr()->GetNextFreeLocationId((uint32_t)EDescSetRole::PARTICLES)))
-        return false;
-
     return true;
 }
 
 void CParticleBaseTechnique::DestroyRenderObjects()
 {
-    // Destroy Images
-    if (m_TextureImage)
-    {
-        vkDestroyImage(g_Engine->Renderer()->GetDevice(), m_TextureImage, nullptr);
-        m_TextureImage = nullptr;
-    }
-    if (m_TextureImageMemory)
-    {
-        vkFreeMemory(g_Engine->Renderer()->GetDevice(), m_TextureImageMemory, nullptr);
-        m_TextureImageMemory = nullptr;
-    }
-
-    // Destroy texture sampler and image view
-    if (m_TextureSampler)
-    {
-        vkDestroySampler(g_Engine->Renderer()->GetDevice(), m_TextureSampler, nullptr);
-        m_TextureSampler = nullptr;
-    }
-    if (m_TextureImageView)
-    {
-        vkDestroyImageView(g_Engine->Renderer()->GetDevice(), m_TextureImageView, nullptr);
-        m_TextureImageView = nullptr;
-    }
-}
-
-bool CParticleBaseTechnique::LoadImage()
-{
-    image_utils::SImageParams params = { "Images/Particles/Tex/tmp_tex.dds", true };
-    image_utils::CreateTextureImage(params);
-
-    m_TextureImage = params.out_texture_image;
-    m_TextureImageMemory = params.out_texture_image_memory;
-    m_MipLevels = params.out_mip_levels;
-
-    if (!m_TextureImage || !m_TextureImageMemory)
-        return utils::FatalError(g_Engine->Hwnd(), "Failed to initialaze CBaseTechnique");
-
-    return true;
-}
-
-bool CParticleBaseTechnique::CreateImageView()
-{
-    m_TextureImageView = image_utils::CreateImageView(m_TextureImage, TEXTURE_FORMAT, VK_IMAGE_ASPECT_COLOR_BIT, m_MipLevels);
-    return m_TextureImageView != nullptr;
-}
-
-bool CParticleBaseTechnique::CreateTextureSampler()
-{
-    VkSamplerCreateInfo samplerInfo = {};
-    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    samplerInfo.magFilter = VK_FILTER_LINEAR;
-    samplerInfo.minFilter = VK_FILTER_LINEAR;
-    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.anisotropyEnable = VK_TRUE;
-    samplerInfo.maxAnisotropy = 16;
-    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-    samplerInfo.unnormalizedCoordinates = VK_FALSE;
-    samplerInfo.compareEnable = VK_FALSE;
-    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    samplerInfo.minLod = 0; // Optional
-    samplerInfo.maxLod = static_cast<float>(m_MipLevels);
-    samplerInfo.mipLodBias = 0; // Optional
-
-    if (VKRESULT(vkCreateSampler(g_Engine->Renderer()->GetDevice(), &samplerInfo, nullptr, &m_TextureSampler)))
-        return utils::FatalError(g_Engine->Hwnd(), "Failed to create texture sampler");
-
-    return true;
 }
 
 void CParticleBaseTechnique::GetColorBlendDesc(VkPipelineColorBlendStateCreateInfo& colorBlending)
@@ -179,7 +93,11 @@ void CParticleBaseTechnique::GetVertexInputDesc(VkPipelineVertexInputStateCreate
 
 void CParticleBaseTechnique::GetPipelineLayoutDesc(VkPipelineLayoutCreateInfo& pipelineLayoutInfo)
 {
-    static std::vector<VkDescriptorSetLayout> lays = { g_Engine->DescMgr()->DescriptorSetLayout((uint32_t)EDescSetRole::GENERAL), g_Engine->DescMgr()->DescriptorSetLayout((uint32_t)EDescSetRole::PARTICLES) };
+    static std::vector<VkDescriptorSetLayout> lays = { 
+        g_Engine->DescMgr()->DescriptorSetLayout((uint32_t)EDescSetRole::GENERAL), 
+        g_Engine->DescMgr()->DescriptorSetLayout((uint32_t)EDescSetRole::PARTICLES),
+        g_Engine->DescMgr()->DescriptorSetLayout((uint32_t)EDescSetRole::DEPTH)
+    };
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = (uint32_t)lays.size();
     pipelineLayoutInfo.pSetLayouts = lays.data();

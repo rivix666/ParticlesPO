@@ -10,6 +10,7 @@
 // Objects/Particles includes
 #include "Objects/GObjectControl.h"
 #include "Particles/ParticleManager.h"
+#include "Particles/ParticleTextureManager.h"
 
 // Misc includes
 #include "Camera.h"
@@ -40,6 +41,7 @@ public:
     inline CTechniqueManager* TechMgr() const { return m_TechMgr; }
     inline CPxManager* PxManager() const { return m_PxMgr; }
     inline CParticleManager* ParticleMgr() const { return m_ParticleMgr; }
+    inline CParticleTextureManager* ParticleTexMgr() const { return m_ParticleTexMgr; }
     inline CGObjectControl* ObjectControl() const { return m_ObjectControl; }
 
     // Renderer Getters
@@ -60,26 +62,27 @@ public:
 
 private:
     // Wnd
-    HWND m_Hwnd = nullptr;
-    GLFWwindow* m_MainWnd = nullptr;
+    HWND                        m_Hwnd = nullptr;
+    GLFWwindow*                 m_MainWnd = nullptr;
 
     // Systems Managers
-    CVulkanRenderer*    m_Renderer = nullptr;
-    CGObjectControl*    m_ObjectControl = nullptr;
-    CParticleManager*   m_ParticleMgr = nullptr;
-    CTechniqueManager*  m_TechMgr = nullptr;
+    CVulkanRenderer*            m_Renderer = nullptr;
+    CGObjectControl*            m_ObjectControl = nullptr;
+    CParticleManager*           m_ParticleMgr = nullptr;
+    CParticleTextureManager*    m_ParticleTexMgr = nullptr;
+    CTechniqueManager*          m_TechMgr = nullptr;
 
     // PhysX
-    CPxManager* m_PxMgr = nullptr;
+    CPxManager*                 m_PxMgr = nullptr;
 
     // Camera
-    CCamera* m_Camera = nullptr;
+    CCamera*                    m_Camera = nullptr;
 
     // Timer
-    double m_LastFrameTime = 0.0;
-    CTimer m_FrameTimer = CTimer(ETimerType::MiliSeconds);
+    double                      m_LastFrameTime = 0.0;
+    CTimer                      m_FrameTimer = CTimer(ETimerType::MiliSeconds);
 
     // Misc
-    bool m_CmdBuffersResetRequested = false;
+    bool                        m_CmdBuffersResetRequested = false;
 };
 

@@ -120,72 +120,75 @@ bool CDescriptorManager::CreateDescriptorSets()
             return utils::FatalError(g_Engine->Hwnd(), "Failed to allocate descriptor set");
         }
 
-        // Prepare Writes vector - for Descriptor Sets update
-        std::vector<VkWriteDescriptorSet> descriptorWrites;
-
-        // We need to store here all infos, so We can release them on the end
-        std::vector<std::vector<VkDescriptorImageInfo>> all_img_info;
-        std::vector<std::vector<VkDescriptorBufferInfo>> all_buff_info;
-        all_img_info.resize(m_DescData[i].size());
-        all_buff_info.resize(m_DescData[i].size());
-
-        // Update buffers info
-        const auto& desc_vec = m_DescData[i];
-        for (size_t j = 0; j < desc_vec.size(); j++)
-        {
-            const auto& data = desc_vec[j];
-            if (!data.is_valid)
-                continue;
-
-            // Write buffers
-            if (!data.buffer.empty())
-            {
-                size_t offset = 0;
-                FetchDescriptorBufferInfo(data, all_buff_info[j]);
-
-                VkWriteDescriptorSet write;
-                write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                write.pNext = nullptr;
-                write.dstSet = m_DescSets[i];
-                write.dstBinding = j;
-                write.dstArrayElement = 0;
-                write.descriptorType = data.type;
-                write.descriptorCount = all_buff_info[j].size();
-                write.pBufferInfo = all_buff_info[j].data();
-                descriptorWrites.push_back(write);
-
-                continue;
-            }
-
-            // Write images
-            if (!data.sampler.empty())
-            {
-                size_t offset = 0;
-                FetchDescriptorImageInfo(data, all_img_info[j]);
-
-                VkWriteDescriptorSet write;
-                write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                write.pNext = nullptr;
-                write.dstSet = m_DescSets[i];
-                write.dstBinding = j;
-                write.dstArrayElement = 0;
-                write.descriptorType = data.type;
-                write.descriptorCount = all_img_info[j].size();
-                write.pImageInfo = all_img_info[j].data();
-                descriptorWrites.push_back(write);
-
-                continue;
-            }
-        }
-
-        // Update Descriptor Sets
-        if (!descriptorWrites.empty())
-        {
-            vkUpdateDescriptorSets(g_Engine->Device(), (uint32_t)(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-        }
+        UpdateDescriptorSet(i);
     }
 
     return true;
+}
+
+void CDescriptorManager::UpdateDescriptorSet(const uint32_t& set)
+{
+    // Prepare Writes vector - for Descriptor Sets update
+    std::vector<VkWriteDescriptorSet> descriptorWrites;
+
+    // We need to store here all infos, so We can release them on the end
+    std::vector<std::vector<VkDescriptorImageInfo>> all_img_info;
+    std::vector<std::vector<VkDescriptorBufferInfo>> all_buff_info;
+    all_img_info.resize(m_DescData[set].size());
+    all_buff_info.resize(m_DescData[set].size());
+
+    // Update buffers info
+    const auto& desc_vec = m_DescData[set];
+    for (size_t j = 0; j < desc_vec.size(); j++)
+    {
+        const auto& data = desc_vec[j];
+        if (!data.is_valid)
+            continue;
+
+        // Write buffers
+        if (!data.buffer.empty())
+        {
+            size_t offset = 0;
+            FetchDescriptorBufferInfo(data, all_buff_info[j]);
+
+            VkWriteDescriptorSet write;
+            write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write.pNext = nullptr;
+            write.dstSet = m_DescSets[set];
+            write.dstBinding = j;
+            write.dstArrayElement = 0;
+            write.descriptorType = data.type;
+            write.descriptorCount = all_buff_info[j].size();
+            write.pBufferInfo = all_buff_info[j].data();
+            descriptorWrites.push_back(write);
+            continue;
+        }
+
+        // Write images
+        if (!data.sampler.empty())
+        {
+            size_t offset = 0;
+            FetchDescriptorImageInfo(data, all_img_info[j]);
+
+            VkWriteDescriptorSet write;
+            write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write.pNext = nullptr;
+            write.dstSet = m_DescSets[set];
+            write.dstBinding = j;
+            write.dstArrayElement = 0;
+            write.descriptorType = data.type;
+            write.descriptorCount = all_img_info[j].size();
+            write.pImageInfo = all_img_info[j].data();
+            descriptorWrites.push_back(write);
+            continue;
+        }
+    }
+
+    // Update Descriptor Sets
+    if (!descriptorWrites.empty())
+    {
+        vkUpdateDescriptorSets(g_Engine->Device(), (uint32_t)(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
 }
 
 // Release
@@ -369,7 +372,7 @@ void CDescriptorManager::FetchDescriptorBufferInfo(const SDescSetData& data, std
     {
         VkDescriptorBufferInfo info;
         info.buffer = data.buffer[arr];
-        info.offset = offset;
+        info.offset = 0; //offset; //#DESC_MGR ONE BIG BUFFER
         info.range = data.sizes[arr];
         out_vec.push_back(info);
         offset += data.sizes[arr];

@@ -68,6 +68,13 @@ bool CEngine::Init()
         // Create Techniques manager
         m_TechMgr = new CTechniqueManager();
 
+        // Create Particle Textures Manager, and register textures in it
+        m_ParticleTexMgr = new CParticleTextureManager();
+        m_ParticleTexMgr->RegisterBaseTextures();
+
+        // Create Particle Manager
+        m_ParticleMgr = new CParticleManager();
+
         // Register Techniques
         if (!RegisterTechniques())
             return false;
@@ -85,8 +92,7 @@ bool CEngine::Init()
         if (!m_PxMgr->Init())
             return false;
 
-        // Create and init Particle manager
-        m_ParticleMgr = new CParticleManager();
+        // Init Particle manager (It's need to be initialized after renderer and PhysX)
         if (!m_ParticleMgr->Init())
             return false;
 

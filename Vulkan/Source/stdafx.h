@@ -46,6 +46,9 @@
 #define OBJ_PER_TECHNIQUE 8
 #define PARTICLE_BUFF_SIZE 24576
 
+// Techs defines
+#define TECH_MAX UINT16_MAX // Why: look at struct ParticleVertex::tech_id
+
 // Projection defines
 #define FOV 60.0f
 #define ASPECT (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT

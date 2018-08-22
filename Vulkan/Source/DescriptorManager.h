@@ -5,6 +5,7 @@ enum class EDescSetRole : uint32_t
     GENERAL = 0,
     OBJECTS,
     PARTICLES,
+    DEPTH,
 
     _COUNT_
 };
@@ -22,7 +23,7 @@ public:
     // Structs
     struct SDescSetData
     {
-        TBuffsVec buffer;
+        TBuffsVec buffer; // #DESC_MGR w przypadku arraya bufferow to powinien byc jeden duzy buffer z offsetami, jak bedzie czast o poprawic (patrz ParticleTextureManager.cpp)
         TSampVec sampler;
         TRangeSizes sizes;
         VkDescriptorType type = (VkDescriptorType) 0;
@@ -46,6 +47,9 @@ public:
     // Call it after you register all buffers/samplers.
     bool CreateDescriptorLayouts();
     bool CreateDescriptorSets();
+
+    // Update
+    void UpdateDescriptorSet(const uint32_t& set);
 
     // Call it if you want to release all descriptors, descriptor layouts and descriptor pool
     bool Shutdown();

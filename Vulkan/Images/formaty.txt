@@ -1,0 +1,2 @@
+Dla textur Particli DXT5 ARGB Interpolated Alpha
+Dla gradientu i reszty 8.8.8.8. ARGB 32 bpp | unsigned

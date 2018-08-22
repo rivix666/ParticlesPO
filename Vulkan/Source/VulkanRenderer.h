@@ -19,17 +19,16 @@ public:
     VkDevice GetDevice() const { return m_Device; }
     VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
     VkRenderPass GetRenderPass() const { return m_RenderPass; }
+    VkImageView GetDepthView() const { return m_DepthImageView; }
     const VkExtent2D& GetSwapChainExtent() const { return m_SwapChainExtent; }
 
     // Uniform buffers
+    size_t GetUniBuffObjSize(const size_t& obj_size) const;
     VkBuffer CamUniBuffer() const { return m_CamUniBuffer; }
     VkDeviceMemory CamUniBufferMemory() const { return m_CamUniBufferMemory; }
 
     // Descriptor Sets
     CDescriptorManager* DescMgr() const;
-    // const VkDescriptorSet* DescriptorSet() const { return &m_DescriptorSet; }
-    // const VkDescriptorPool* DescriptorPool() const { return &m_DescriptorPool; }
-    // const VkDescriptorSetLayout* DescriptorSetLayout() const { return &m_DescriptorSetLayout; }
 
     // Buffers
     uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -105,9 +104,6 @@ protected:
 
     // Descriptor Sets
     bool CreateDescriptorPool();
-    // bool CreateDescriptorSetLayout();
-    // bool CreateDescriptorPool();
-    // bool CreateDescriptorSet();
 
     // Buffers
     bool CreateGeneralUniformBuffers();
@@ -159,12 +155,10 @@ private:
     VkImage m_DepthImage = nullptr;
     VkDeviceMemory m_DepthImageMemory = nullptr;
     VkImageView m_DepthImageView = nullptr;
+    VkSampler m_DepthSampler = nullptr; 
 
     // Descriptor Set
     CDescriptorManager* m_DescMgr = nullptr;
-    //VkDescriptorSet m_DescriptorSet = nullptr;
-    //VkDescriptorPool m_DescriptorPool = nullptr;
-    //VkDescriptorSetLayout m_DescriptorSetLayout = nullptr;
 
     // Command buffers
     VkCommandPool m_CommandPool = nullptr;

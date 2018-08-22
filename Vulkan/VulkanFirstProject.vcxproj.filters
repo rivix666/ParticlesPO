@@ -96,6 +96,7 @@
       <Filter>Techs</Filter>
     </ClInclude>
     <ClInclude Include="Source\DescriptorManager.h" />
+    <ClInclude Include="Source\Particles\ParticleTextureManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Utils\Timer.cpp">
@@ -159,6 +160,9 @@
       <Filter>Techs</Filter>
     </ClCompile>
     <ClCompile Include="Source\DescriptorManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Particles\ParticleTextureManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
