@@ -1,5 +1,5 @@
 #pragma once
-#include "ITechnique.h"
+#include "Interface/BaseGraphicsTechnique.h"
 
 struct SObjUniBuffer
 {
@@ -18,10 +18,10 @@ struct BaseVertex
     static void GetAttributeDescriptions(std::vector<VkVertexInputAttributeDescription>& out_desc);
 };
 
-class CBaseTechnique : public ITechnique
+class CBaseObjectTechnique : public CBaseGraphicsTechnique
 {
 public:
-    CBaseTechnique() = default;
+    CBaseObjectTechnique() = default;
 
     // UniBuff getters
     VkBuffer UniBuffer() const override { return m_BaseObjUniBuffer; }

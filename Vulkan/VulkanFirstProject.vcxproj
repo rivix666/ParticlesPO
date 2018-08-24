@@ -168,6 +168,10 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Techs\Interface\BaseGraphicsTechnique.h" />
+    <ClInclude Include="Source\Techs\Interface\BaseComputeTechnique.h" />
+    <ClInclude Include="Source\Techs\Interface\stdafx.h" />
+    <ClInclude Include="Source\Techs\ParticleSortCmpTechnique.h" />
     <ClInclude Include="Source\Techs\ParticleTechniques.h" />
     <ClInclude Include="Source\Particles\ParticleTextureManager.h" />
     <ClInclude Include="Source\DescriptorManager.h" />
@@ -187,15 +191,18 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     <ClInclude Include="Source\Engine.h" />
     <ClInclude Include="Source\Objects\GBaseObject.h" />
     <ClInclude Include="Source\Objects\IGObject.h" />
-    <ClInclude Include="Source\Techs\ITechnique.h" />
+    <ClInclude Include="Source\Techs\Interface\ITechnique.h" />
     <ClInclude Include="Source\Utils\ShaderUtils.h" />
     <ClInclude Include="Source\stdafx.h" />
-    <ClInclude Include="Source\Techs\BaseTechnique.h" />
+    <ClInclude Include="Source\Techs\BaseObjectTechnique.h" />
     <ClInclude Include="Source\Utils\stdafx.h" />
     <ClInclude Include="Source\Utils\Timer.h" />
     <ClInclude Include="Source\VulkanRenderer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Techs\Interface\BaseGraphicsTechnique.cpp" />
+    <ClCompile Include="Source\Techs\Interface\BaseComputeTechnique.cpp" />
+    <ClCompile Include="Source\Techs\ParticleSortCmpTechnique.cpp" />
     <ClCompile Include="Source\Techs\ParticleTechniques.cpp" />
     <ClCompile Include="Source\Particles\ParticleTextureManager.cpp" />
     <ClCompile Include="Source\DescriptorManager.cpp" />
@@ -211,7 +218,7 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     <ClCompile Include="Source\Engine.cpp" />
     <ClCompile Include="Source\Objects\GBaseObject.cpp" />
     <ClCompile Include="Source\Objects\IGObject.cpp" />
-    <ClCompile Include="Source\Techs\ITechnique.cpp" />
+    <ClCompile Include="Source\Techs\Interface\ITechnique.cpp" />
     <ClCompile Include="Source\Utils\ShaderUtils.cpp" />
     <ClCompile Include="Source\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -219,7 +226,7 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Source\Techs\BaseTechnique.cpp" />
+    <ClCompile Include="Source\Techs\BaseObjectTechnique.cpp" />
     <ClCompile Include="Source\Utils\Timer.cpp" />
     <ClCompile Include="Source\Vulkan_Particles.cpp" />
     <ClCompile Include="Source\VulkanRenderer.cpp" />
@@ -233,6 +240,7 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     <None Include="Effects\source\particleEffect.frag" />
     <None Include="Effects\source\particleEffect.geom" />
     <None Include="Effects\source\particleEffect.vert" />
+    <None Include="Effects\source\particleEffect.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

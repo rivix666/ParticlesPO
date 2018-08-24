@@ -1,6 +1,6 @@
 #pragma once
 #include "IGObject.h"
-#include "../Techs/BaseTechnique.h"
+#include "../Techs/BaseObjectTechnique.h"
 
 enum class EBaseObjInitType
 {

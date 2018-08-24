@@ -1,5 +1,5 @@
 #pragma once
-#include "../Techs/ITechnique.h"
+#include "../Techs/Interface/ITechnique.h"
 
 struct SObjMtxInitParams
 {

@@ -15,6 +15,8 @@ CShaderUtils::~CShaderUtils()
         vkDestroyShaderModule(g_Engine->Renderer()->GetDevice(), m_GeomShaderModule, nullptr);
     if (m_VertShaderModule)
         vkDestroyShaderModule(g_Engine->Renderer()->GetDevice(), m_VertShaderModule, nullptr);
+    if (m_CompShaderModule)
+        vkDestroyShaderModule(g_Engine->Renderer()->GetDevice(), m_CompShaderModule, nullptr);
 }
 
 void CShaderUtils::Initialize(const SShaderParams& params)
@@ -22,6 +24,7 @@ void CShaderUtils::Initialize(const SShaderParams& params)
     std::vector<char> vertShaderCode;
     std::vector<char> geomShaderCode;
     std::vector<char> fragShaderCode;
+    std::vector<char> compShaderCode;
 
     // Read shader files
     if (!params.vertex_shader_path.empty())
@@ -30,6 +33,8 @@ void CShaderUtils::Initialize(const SShaderParams& params)
         ReadFile(params.geometry_shader_path.c_str(), geomShaderCode);
     if (!params.fragment_shader_path.empty())
         ReadFile(params.fragment_shader_path.c_str(), fragShaderCode);
+    if (!params.compute_shader_path.empty())
+        ReadFile(params.compute_shader_path.c_str(), compShaderCode);
 
     // Create shader modules
     if (!m_VertShaderModule && !vertShaderCode.empty())
@@ -38,6 +43,8 @@ void CShaderUtils::Initialize(const SShaderParams& params)
         m_GeomShaderModule = CreateShaderModule(geomShaderCode);
     if (!m_FragShaderModule && !fragShaderCode.empty())
         m_FragShaderModule = CreateShaderModule(fragShaderCode);
+    if (!m_CompShaderModule && !compShaderCode.empty())
+        m_CompShaderModule = CreateShaderModule(compShaderCode);
 
     // Create shader stage info vec
     if (m_VertShaderModule)
@@ -68,6 +75,16 @@ void CShaderUtils::Initialize(const SShaderParams& params)
         fragShaderStageInfo.module = m_FragShaderModule;
         fragShaderStageInfo.pName = params.fragment_entry.c_str(); // #TECH te pointery sie nie zwolnia?
         m_ShaderStageInfo.push_back(fragShaderStageInfo);
+    }
+
+    if (m_CompShaderModule)
+    {
+        VkPipelineShaderStageCreateInfo compShaderStageInfo = {};
+        compShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        compShaderStageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+        compShaderStageInfo.module = m_CompShaderModule;
+        compShaderStageInfo.pName = params.compute_entry.c_str(); // #TECH te pointery sie nie zwolnia?
+        m_ShaderStageInfo.push_back(compShaderStageInfo);
     }
 }
 

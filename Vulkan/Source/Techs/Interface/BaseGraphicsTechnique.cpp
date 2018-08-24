@@ -1,49 +1,12 @@
 #include "stdafx.h"
-#include "ITechnique.h"
+#include "BaseGraphicsTechnique.h"
 
-ITechnique::ITechnique(ITechnique* parent /*= nullptr*/)
-    : m_Parent(parent)
+CBaseGraphicsTechnique::CBaseGraphicsTechnique(ITechnique* parent /*= nullptr*/)
+    : ITechnique(parent)
 {
 }
 
-ITechnique::~ITechnique()
-{
-    DestroyRenderObjects();
-}
-
-bool ITechnique::Init()
-{
-    m_Renderer = g_Engine->Renderer();
-
-    if (!CreateGraphicsPipeline())
-        return Shutdown();
-
-    return true;
-}
-
-bool ITechnique::Shutdown()
-{
-    if (m_Renderer)
-    {
-        if (m_GraphicsPipeline)
-        {
-            vkDestroyPipeline(m_Renderer->GetDevice(), m_GraphicsPipeline, nullptr);
-            m_GraphicsPipeline = nullptr;
-        }
-
-        if (m_PipelineLayout)
-        {
-            vkDestroyPipelineLayout(m_Renderer->GetDevice(), m_PipelineLayout, nullptr);
-            m_PipelineLayout = nullptr;
-        }
-
-        m_Renderer = nullptr;
-    }
-
-    return false;
-}
-
-bool ITechnique::CreateGraphicsPipeline()
+bool CBaseGraphicsTechnique::CreatePipeline()
 {
     if (m_Parent)
     {
@@ -110,30 +73,20 @@ bool ITechnique::CreateGraphicsPipeline()
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
     //pipelineInfo.basePipelineIndex = -1; // Optional
 
-    if (VKRESULT(vkCreateGraphicsPipelines(m_Renderer->GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_GraphicsPipeline)))
+    if (VKRESULT(vkCreateGraphicsPipelines(m_Renderer->GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_Pipeline)))
         return utils::FatalError(g_Engine->Hwnd(), "Failed to create graphics pipeline");
 
     return true;
 }
 
-VkPipeline ITechnique::GetPipeline() const
-{
-    return m_Parent ? m_Parent->GetPipeline() : m_GraphicsPipeline;
-}
-
-VkPipelineLayout ITechnique::GetPipelineLayout() const
-{
-    return m_Parent ? m_Parent->GetPipelineLayout() : m_PipelineLayout;
-}
-
-void ITechnique::GetInputAssemblyDesc(VkPipelineInputAssemblyStateCreateInfo& inputAssembly)
+void CBaseGraphicsTechnique::GetInputAssemblyDesc(VkPipelineInputAssemblyStateCreateInfo& inputAssembly)
 {
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     inputAssembly.primitiveRestartEnable = VK_FALSE;
 }
 
-void ITechnique::GetViewportDesc(VkPipelineViewportStateCreateInfo& viewportState)
+void CBaseGraphicsTechnique::GetViewportDesc(VkPipelineViewportStateCreateInfo& viewportState)
 {
     static VkViewport viewport = {}; // #TECH_UGH static
     viewport.x = 0.0f;
@@ -154,7 +107,7 @@ void ITechnique::GetViewportDesc(VkPipelineViewportStateCreateInfo& viewportStat
     viewportState.pScissors = &scissor;
 }
 
-void ITechnique::GetRasterizerDesc(VkPipelineRasterizationStateCreateInfo& rasterizer)
+void CBaseGraphicsTechnique::GetRasterizerDesc(VkPipelineRasterizationStateCreateInfo& rasterizer)
 {
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizer.depthClampEnable = VK_FALSE;
@@ -170,7 +123,7 @@ void ITechnique::GetRasterizerDesc(VkPipelineRasterizationStateCreateInfo& raste
     rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
 }
 
-void ITechnique::GetMultisamplingDesc(VkPipelineMultisampleStateCreateInfo& multisampling)
+void CBaseGraphicsTechnique::GetMultisamplingDesc(VkPipelineMultisampleStateCreateInfo& multisampling)
 {
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisampling.sampleShadingEnable = VK_FALSE;
@@ -181,7 +134,7 @@ void ITechnique::GetMultisamplingDesc(VkPipelineMultisampleStateCreateInfo& mult
     multisampling.alphaToOneEnable = VK_FALSE; // Optional
 }
 
-void ITechnique::GetDepthStencilDesc(VkPipelineDepthStencilStateCreateInfo& depthStencil)
+void CBaseGraphicsTechnique::GetDepthStencilDesc(VkPipelineDepthStencilStateCreateInfo& depthStencil)
 {
     depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     depthStencil.depthTestEnable = VK_TRUE;
@@ -195,7 +148,7 @@ void ITechnique::GetDepthStencilDesc(VkPipelineDepthStencilStateCreateInfo& dept
     depthStencil.back = {}; // Optional
 }
 
-void ITechnique::GetColorBlendDesc(VkPipelineColorBlendStateCreateInfo& colorBlending)
+void CBaseGraphicsTechnique::GetColorBlendDesc(VkPipelineColorBlendStateCreateInfo& colorBlending)
 {
     // Color blending Attachment
     static VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
@@ -220,7 +173,7 @@ void ITechnique::GetColorBlendDesc(VkPipelineColorBlendStateCreateInfo& colorBle
     colorBlending.blendConstants[3] = 1.0f; // Optional
 }
 
-void ITechnique::GetDynamicStateDesc(VkPipelineDynamicStateCreateInfo& dynamicState)
+void CBaseGraphicsTechnique::GetDynamicStateDesc(VkPipelineDynamicStateCreateInfo& dynamicState)
 {
     // VkDynamicState dynamicStates = {};
     // dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
@@ -241,15 +194,4 @@ void ITechnique::GetDynamicStateDesc(VkPipelineDynamicStateCreateInfo& dynamicSt
     dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicState.dynamicStateCount = 2;
     dynamicState.pDynamicStates = dynamicStates;
-}
-
-bool ITechnique::CreatePipelineLayout()
-{
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
-    GetPipelineLayoutDesc(pipelineLayoutInfo);
-
-    if (VKRESULT(vkCreatePipelineLayout(g_Engine->Renderer()->GetDevice(), &pipelineLayoutInfo, nullptr, &m_PipelineLayout)))
-        return utils::FatalError(g_Engine->Hwnd(), "Failed to create pipeline layout");
-
-    return true;
 }

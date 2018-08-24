@@ -53,13 +53,7 @@
     <ClInclude Include="Source\Objects\stdafx.h">
       <Filter>Objects</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Techs\BaseTechnique.h">
-      <Filter>Techs</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Techs\TechniqueManager.h">
-      <Filter>Techs</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Techs\ITechnique.h">
       <Filter>Techs</Filter>
     </ClInclude>
     <ClInclude Include="Source\Techs\stdafx.h">
@@ -97,6 +91,16 @@
       <Filter>Particles\Emitters</Filter>
     </ClInclude>
     <ClInclude Include="Source\Techs\ParticleTechniques.h" />
+    <ClInclude Include="Source\Techs\ParticleSortCmpTechnique.h" />
+    <ClInclude Include="Source\Techs\BaseObjectTechnique.h">
+      <Filter>Techs</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Techs\Interface\BaseComputeTechnique.h" />
+    <ClInclude Include="Source\Techs\Interface\BaseGraphicsTechnique.h" />
+    <ClInclude Include="Source\Techs\Interface\ITechnique.h">
+      <Filter>Techs</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Techs\Interface\stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Utils\Timer.cpp">
@@ -135,12 +139,6 @@
     <ClCompile Include="Source\Objects\GBaseObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Techs\ITechnique.cpp">
-      <Filter>Techs</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Techs\BaseTechnique.cpp">
-      <Filter>Techs</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Techs\TechniqueManager.cpp">
       <Filter>Techs</Filter>
     </ClCompile>
@@ -165,6 +163,21 @@
     <ClCompile Include="Source\Techs\ParticleTechniques.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Techs\ParticleSortCmpTechnique.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Techs\BaseObjectTechnique.cpp">
+      <Filter>Techs</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Techs\Interface\BaseComputeTechnique.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Techs\Interface\BaseGraphicsTechnique.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Techs\Interface\ITechnique.cpp">
+      <Filter>Techs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Effects\baseEffect.vert">
@@ -179,5 +192,6 @@
     <None Include="Effects\source\particleEffect.frag" />
     <None Include="Effects\source\particleEffect.geom" />
     <None Include="Effects\source\particleEffect.vert" />
+    <None Include="Effects\source\particleEffect.comp" />
   </ItemGroup>
 </Project>

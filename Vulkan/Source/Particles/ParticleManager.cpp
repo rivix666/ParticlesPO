@@ -26,7 +26,7 @@ bool CParticleManager::Init()
     // Create Vertex Buffer
     g_Engine->Renderer()->CreateBuffer(
         PARTICLE_BUFF_SIZE * sizeof(ParticleVertex), 
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT, 
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
         m_VertexBuffer, 
         m_VertexBufferMemory);

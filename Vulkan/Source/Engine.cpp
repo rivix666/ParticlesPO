@@ -5,7 +5,7 @@
 #include "Objects/GBaseObject.h"
 
 // Techniques includes
-#include "Techs/BaseTechnique.h"
+#include "Techs/BaseObjectTechnique.h"
 #include "Techs/TechniqueManager.h"
 #include "Techs/ParticleBaseTechnique.h"
 #include "Techs/ParticleTechniques.h"
@@ -108,7 +108,7 @@ bool CEngine::RegisterTechniques()
     if (m_TechMgr)
     {
         // Register Objects techniques
-        CGBaseObject::s_TechId = REGISTER_TECH(BaseVertex, new CBaseTechnique);
+        CGBaseObject::s_TechId = REGISTER_TECH(BaseVertex, new CBaseObjectTechnique);
 
         // Register Particles techniques
         auto base_tech = new CParticleBaseTechnique();

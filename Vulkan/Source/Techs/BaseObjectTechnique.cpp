@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "BaseTechnique.h"
+#include "BaseObjectTechnique.h"
 #include "../Utils/ImageUtils.h"
 #include "../DescriptorManager.h"
 
@@ -30,12 +30,12 @@ void BaseVertex::GetAttributeDescriptions(std::vector<VkVertexInputAttributeDesc
 }
 
 //////////////////////////////////////////////////////////////////////////
-void CBaseTechnique::GetImageSamplerPairs(std::vector<TImgSampler>& out_pairs) const
+void CBaseObjectTechnique::GetImageSamplerPairs(std::vector<TImgSampler>& out_pairs) const
 {
     out_pairs.push_back(TImgSampler(m_TextureImageView, m_TextureSampler));
 }
 
-bool CBaseTechnique::CreateRenderObjects()
+bool CBaseObjectTechnique::CreateRenderObjects()
 {
     if (!LoadImage())
         return false;
@@ -73,7 +73,7 @@ bool CBaseTechnique::CreateRenderObjects()
     return true;
 }
 
-void CBaseTechnique::DestroyRenderObjects()
+void CBaseObjectTechnique::DestroyRenderObjects()
 {
     // Destroy uni buffer
     if (m_BaseObjUniBuffer)
@@ -112,7 +112,7 @@ void CBaseTechnique::DestroyRenderObjects()
     }
 }
 
-bool CBaseTechnique::CreateUniBuffer()
+bool CBaseObjectTechnique::CreateUniBuffer()
 {
     size_t minUboAlignment = g_Engine->Renderer()->MinUboAlignment();
     double size = ceil((double)GetSingleUniBuffObjSize() / (double)minUboAlignment);
@@ -120,7 +120,7 @@ bool CBaseTechnique::CreateUniBuffer()
     return g_Engine->Renderer()->CreateBuffer(baseObjBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_BaseObjUniBuffer, m_BaseObjUniBufferMemory);
 }
 
-bool CBaseTechnique::LoadImage()
+bool CBaseObjectTechnique::LoadImage()
 {
     image_utils::SImageParams params = { "Images/Other/ground.dds", true };
     image_utils::CreateTextureImage(params);
@@ -135,13 +135,13 @@ bool CBaseTechnique::LoadImage()
     return true;
 }
 
-bool CBaseTechnique::CreateImageView()
+bool CBaseObjectTechnique::CreateImageView()
 {
     m_TextureImageView = image_utils::CreateImageView(m_TextureImage, TEXTURE_FORMAT, VK_IMAGE_ASPECT_COLOR_BIT, m_MipLevels);
     return m_TextureImageView != nullptr;
 }
 
-bool CBaseTechnique::CreateTextureSampler()
+bool CBaseObjectTechnique::CreateTextureSampler()
 {
     VkSamplerCreateInfo samplerInfo = {};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -167,7 +167,7 @@ bool CBaseTechnique::CreateTextureSampler()
     return true;
 }
 
-void CBaseTechnique::GetVertexInputDesc(VkPipelineVertexInputStateCreateInfo& vertexInputInfo)
+void CBaseObjectTechnique::GetVertexInputDesc(VkPipelineVertexInputStateCreateInfo& vertexInputInfo)
 {
     // Prepare descriptions
     m_AttributesDesc.clear();
@@ -182,7 +182,7 @@ void CBaseTechnique::GetVertexInputDesc(VkPipelineVertexInputStateCreateInfo& ve
     vertexInputInfo.pVertexAttributeDescriptions = m_AttributesDesc.data();
 }
 
-void CBaseTechnique::GetPipelineLayoutDesc(VkPipelineLayoutCreateInfo& pipelineLayoutInfo)
+void CBaseObjectTechnique::GetPipelineLayoutDesc(VkPipelineLayoutCreateInfo& pipelineLayoutInfo)
 {
     static std::vector<VkDescriptorSetLayout> lays = { g_Engine->DescMgr()->DescriptorSetLayout((uint32_t)EDescSetRole::GENERAL), g_Engine->DescMgr()->DescriptorSetLayout((uint32_t)EDescSetRole::OBJECTS) };
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -190,7 +190,7 @@ void CBaseTechnique::GetPipelineLayoutDesc(VkPipelineLayoutCreateInfo& pipelineL
     pipelineLayoutInfo.pSetLayouts = lays.data();
 }
 
-void CBaseTechnique::GetShadersDesc(SShaderParams& params)
+void CBaseObjectTechnique::GetShadersDesc(SShaderParams& params)
 {
     params.vertex_shader_path = "Effects/baseVert.spv";
     params.fragment_shader_path = "Effects/baseFrag.spv";

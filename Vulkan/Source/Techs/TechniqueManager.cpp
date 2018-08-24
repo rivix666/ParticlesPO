@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "TechniqueManager.h"
-#include "ITechnique.h"
+#include "Interface/ITechnique.h"
 
 CTechniqueManager::CTechniqueManager()
 {
