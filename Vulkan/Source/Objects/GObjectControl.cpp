@@ -151,6 +151,23 @@ void CGObjectControl::UpdateUniBuffers()
     }
 }
 
+void CGObjectControl::UpdatePhysXActors()
+{
+    // Retrieve array of actors that moved
+    uint32_t count;
+    const physx::PxActiveTransform* active_transforms = g_Engine->PxManager()->Scene()->getActiveTransforms(count);
+
+    // Update each render object with the new transform
+    for (uint32_t i = 0; i < count; ++i)
+    {
+        auto render_object = static_cast<IGObject*>(active_transforms[i].userData);
+        auto transform = active_transforms[i].actor2World;
+        glm::mat4 new_world = glm::toMat4(glm::quat(transform.q.w, transform.q.x, transform.q.y, transform.q.z));      
+        new_world[3] = glm::vec4(transform.p.x, transform.p.y, transform.p.z, new_world[3].w);
+        render_object->SetWorldMtx(new_world);
+    }
+}
+
 void CGObjectControl::EnsureTechIdWillFit(const uint32_t& tech_id)
 {
     if (m_TechToObjVec.size() <= tech_id)

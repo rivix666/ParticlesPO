@@ -31,6 +31,8 @@ public:
 
     void UpdateUniBuffers();
 
+    void UpdatePhysXActors();
+
     const TTech2ObjVec& GetTech2ObjVec() const { return m_TechToObjVec; }
 
 private:

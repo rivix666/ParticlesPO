@@ -31,7 +31,7 @@ namespace utils
         static CTimer spf_timer(ETimerType::MiliSeconds);
 
         double elapsed_time = spf_timer.getElapsedTime();
-        if (idx <= 10)
+        if (idx <= 100)
         {
             acc += elapsed_time;
             idx++;
@@ -52,11 +52,9 @@ namespace utils
         std::wstring ws;
         ws = W_WINDOW_TITLE;
 
-        //#REDESIGN
-        //static ParticleBufferData* partData = g_Engine->GetParticleManager()->m_ParticlesData;
         // Particles Info
         ws += L" - Num of particles: ";
-        //ws += std::to_wstring(partData->m_iCPUFree);
+        ws += std::to_wstring(g_Engine->ParticleMgr()->BuffData().CPUFree);
         ws += L" | Sorted on: ";
         //ws += g_Engine->m_SortOnGPU ? L"GPU" : L"CPU";
 

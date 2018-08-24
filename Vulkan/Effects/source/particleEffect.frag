@@ -60,8 +60,8 @@ void main()
     float depthFade = CalcSoftParticles(subpassLoad(inputAttachment).x);
 
     // Modify alpha channel by particle life and depthFade
-    col.a *= inLife;
     col.a *= depthFade;
+    //col.a *= inLife;
 
     // Change colors with burn modifier
     col = CalcControlAdditiveBlend(col, tech_ubo[inTechId].burn);

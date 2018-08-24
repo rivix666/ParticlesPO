@@ -126,7 +126,7 @@ bool CPxManager::InitScene()
     sceneDesc.gravity = PxVec3(0.0f, -9.8f, 0.0f);
     sceneDesc.cpuDispatcher = PxDefaultCpuDispatcherCreate(1);
     sceneDesc.filterShader = CustomFilterShader;
-    sceneDesc.flags |= PxSceneFlag::eENABLE_CCD | PxSceneFlag::eENABLE_KINEMATIC_STATIC_PAIRS;
+    sceneDesc.flags |= PxSceneFlag::eENABLE_CCD | PxSceneFlag::eENABLE_KINEMATIC_STATIC_PAIRS | PxSceneFlag::eENABLE_ACTIVETRANSFORMS;
     m_Scene = m_PhysicsSDK->createScene(sceneDesc);
 
     if (!m_Scene)

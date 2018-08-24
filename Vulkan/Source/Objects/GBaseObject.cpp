@@ -45,13 +45,15 @@ bool CGBaseObject::InitPhysXObj()
 
         glm::vec3 pos(m_WorldMtx[3]);
         physx::PxPlane plane(physx::PxVec3(0.0f, 0.1f, 0.0f), physx::PxVec3(0.0f, 1.0f, 0.0f));
-        m_PxActor = PxCreatePlane(*g_Engine->PxManager()->SDK(), plane, *m_PxMaterial);
+        auto tmp_actor = PxCreatePlane(*g_Engine->PxManager()->SDK(), plane, *m_PxMaterial);
 
         physx::PxShape* planeShape = g_Engine->PxManager()->SDK()->createShape(physx::PxPlaneGeometry(), *m_PxMaterial);
         planeShape->setLocalPose(physx::PxTransform(physx::PxVec3(pos.x, pos.y, pos.z)));
         planeShape->setFlag(physx::PxShapeFlag::ePARTICLE_DRAIN, true);
-        m_PxActor->attachShape(*planeShape);
+        tmp_actor->attachShape(*planeShape);
+        tmp_actor->userData = this;
 
+        m_PxActor = tmp_actor;
         g_Engine->PxManager()->RegisterActor(m_PxActor);
         return true;
     }
@@ -60,12 +62,16 @@ bool CGBaseObject::InitPhysXObj()
         m_PxMaterial = g_Engine->PxManager()->SDK()->createMaterial(1.0, 1.0, 0.0);
 
         glm::vec3 pos(m_WorldMtx[3]);
-        physx::PxShape* shape = g_Engine->PxManager()->SDK()->createShape(physx::PxBoxGeometry(1.0f, 1.0f, 1.0f), *m_PxMaterial);
-        shape->setFlag(physx::PxShapeFlag::ePARTICLE_DRAIN, true);
-        
-        physx::PxTransform transform(physx::PxVec3(pos.x, pos.y, pos.z));
-        m_PxActor = physx::PxCreateStatic(*g_Engine->PxManager()->SDK(), transform, *shape);
+        physx::PxShape* shape = g_Engine->PxManager()->SDK()->createShape(physx::PxBoxGeometry(physx::PxVec3(1.0f, 1.0f, 1.0f)), *m_PxMaterial);
+        shape->setFlag(physx::PxShapeFlag::ePARTICLE_DRAIN, false);
 
+        physx::PxTransform transform(physx::PxVec3(pos.x, pos.y, pos.z));
+        physx::PxCreateDynamic(*g_Engine->PxManager()->SDK(), transform, *shape, 1.0f);
+        auto tmp_actor = physx::PxCreateDynamic(*g_Engine->PxManager()->SDK(), transform, *shape, 1.0f);
+        tmp_actor->setActorFlag(physx::PxActorFlag::eDISABLE_GRAVITY, true);
+        tmp_actor->userData = this;
+
+        m_PxActor = tmp_actor;
         g_Engine->PxManager()->RegisterActor(m_PxActor);
         return true;
     }
@@ -143,6 +149,17 @@ void* CGBaseObject::GetUniBuffData()
     return &m_UniBuffData;
 }
 
+void CGBaseObject::Translate(const glm::vec3& pos)
+{
+    __super::Translate(pos);
+    if (m_Type == EBaseObjInitType::BOX)
+    {
+        glm::vec3 old_pos(m_WorldMtx[3]);
+        auto dynamic_actor = static_cast<physx::PxRigidDynamic*>(m_PxActor);
+        dynamic_actor->setGlobalPose(physx::PxTransform(physx::PxVec3(old_pos.x + pos.x, old_pos.y + pos.y, old_pos.z + pos.z)));
+    }
+}
+
 void CGBaseObject::InitVectors(const EBaseObjInitType& type)
 {
     switch (type)
@@ -165,40 +182,40 @@ void CGBaseObject::InitVectors(const EBaseObjInitType& type)
         m_Vertices =
         {
             // DOWN
-            { { -1.0f, 0.0f, -1.0f }, { 0.0f, 0.0f } }, // front left 0
-            { {  1.0f, 0.0f, -1.0f }, { 1.0f, 0.0f } }, // front right 1
-            { { -1.0f, 0.0f,  1.0f }, { 0.0f, 1.0f } }, // back left 2
-            { {  1.0f, 0.0f,  1.0f }, { 1.0f, 1.0f } }, // back right 3
+            { { -1.0f, -1.0f, -1.0f }, { 0.0f, 0.0f } }, // front left 0
+            { {  1.0f, -1.0f, -1.0f }, { 1.0f, 0.0f } }, // front right 1
+            { { -1.0f, -1.0f,  1.0f }, { 0.0f, 1.0f } }, // back left 2
+            { {  1.0f, -1.0f,  1.0f }, { 1.0f, 1.0f } }, // back right 3
 
             // RIGHT
-            { { -1.0f, 0.0f, -1.0f }, { 0.0f, 0.0f } }, // front left 4
-            { {  1.0f, 0.0f, -1.0f }, { 1.0f, 0.0f } }, // front right 5
-            { { -1.0f, 2.0f, -1.0f }, { 0.0f, 1.0f } }, // front  up left 6
-            { {  1.0f, 2.0f, -1.0f }, { 1.0f, 1.0f } }, // front up right 7
+            { { -1.0f, -1.0f, -1.0f }, { 0.0f, 0.0f } }, // front left 4
+            { {  1.0f, -1.0f, -1.0f }, { 1.0f, 0.0f } }, // front right 5
+            { { -1.0f, 1.0f, -1.0f }, { 0.0f, 1.0f } }, // front  up left 6
+            { {  1.0f, 1.0f, -1.0f }, { 1.0f, 1.0f } }, // front up right 7
 
             // UP
-            { { -1.0f, 2.0f, -1.0f }, { 0.0f, 0.0f } }, // front left 8
-            { {  1.0f, 2.0f, -1.0f }, { 1.0f, 0.0f } }, // front right 9
-            { { -1.0f, 2.0f,  1.0f }, { 0.0f, 1.0f } }, // back left 10
-            { {  1.0f, 2.0f,  1.0f }, { 1.0f, 1.0f } }, // back right 11
+            { { -1.0f, 1.0f, -1.0f }, { 0.0f, 0.0f } }, // front left 8
+            { {  1.0f, 1.0f, -1.0f }, { 1.0f, 0.0f } }, // front right 9
+            { { -1.0f, 1.0f,  1.0f }, { 0.0f, 1.0f } }, // back left 10
+            { {  1.0f, 1.0f,  1.0f }, { 1.0f, 1.0f } }, // back right 11
 
             // LEFT
-            { { -1.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } }, // front left 12
-            { {  1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }, // front right 13
-            { { -1.0f, 2.0f, 1.0f }, { 0.0f, 1.0f } }, // front  up left 14
-            { {  1.0f, 2.0f, 1.0f }, { 1.0f, 1.0f } }, // front up right 15
+            { { -1.0f, -1.0f, 1.0f }, { 0.0f, 0.0f } }, // front left 12
+            { {  1.0f, -1.0f, 1.0f }, { 1.0f, 0.0f } }, // front right 13
+            { { -1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f } }, // front  up left 14
+            { {  1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f } }, // front up right 15
 
             // FRONT
-            { { -1.0f, 0.0f, -1.0f }, { 0.0f, 0.0f } }, // front left 16
-            { { -1.0f, 0.0f,  1.0f }, { 1.0f, 0.0f } }, // front right 17
-            { { -1.0f, 2.0f, -1.0f }, { 0.0f, 1.0f } }, // front  up left 18
-            { { -1.0f, 2.0f,  1.0f }, { 1.0f, 1.0f } }, // front up right 19
+            { { -1.0f, -1.0f, -1.0f }, { 0.0f, 0.0f } }, // front left 16
+            { { -1.0f, -1.0f,  1.0f }, { 1.0f, 0.0f } }, // front right 17
+            { { -1.0f, 1.0f, -1.0f }, { 0.0f, 1.0f } }, // front  up left 18
+            { { -1.0f, 1.0f,  1.0f }, { 1.0f, 1.0f } }, // front up right 19
 
             // BACK
-            { { 1.0f, 0.0f, -1.0f }, { 0.0f, 0.0f } }, // front left 20
-            { { 1.0f, 0.0f,  1.0f }, { 1.0f, 0.0f } }, // front right 21
-            { { 1.0f, 2.0f, -1.0f }, { 0.0f, 1.0f } }, // front  up left 22
-            { { 1.0f, 2.0f,  1.0f }, { 1.0f, 1.0f } }, // front up right 23
+            { { 1.0f, -1.0f, -1.0f }, { 0.0f, 0.0f } }, // front left 20
+            { { 1.0f, -1.0f,  1.0f }, { 1.0f, 0.0f } }, // front right 21
+            { { 1.0f, 1.0f, -1.0f }, { 0.0f, 1.0f } }, // front  up left 22
+            { { 1.0f, 1.0f,  1.0f }, { 1.0f, 1.0f } }, // front up right 23
         };
         m_Indices = 
         { 

@@ -2,6 +2,7 @@
 
 // #TMP
 #include "Objects/GBaseObject.h"
+#include "Particles/Emitters/BaseEmitter.h" 
 
 //#pragma optimize("", off)
 
@@ -38,15 +39,20 @@ bool InitEngine()
         return false;
     }
 
+    // #TMP
+    auto em1 = new CBaseEmitter(1, 1000);
+    REGISTER_EMITTER(em1, -1);
+    em1->SetPos(glm::vec3(0.0f, 6.0f, 0.0f));
+
     return true;
 }
 
 void RegisterBaseObjects()
 {
     REGISTER_OBJ_TECH(0, new CGBaseObject(EBaseObjInitType::PLANE));
-    REGISTER_OBJ_TECH(0, new CGBaseObject(EBaseObjInitType::BOX, glm::vec3(0.0f, 4.0f, 0.0f)));
-    REGISTER_OBJ_TECH(0, new CGBaseObject(EBaseObjInitType::BOX, glm::vec3(-4.0f, 4.0f, 0.0f)));
-    REGISTER_OBJ_TECH(0, new CGBaseObject(EBaseObjInitType::BOX, glm::vec3(4.0f, 4.0f, 0.0f)));
+    REGISTER_OBJ_TECH(0, new CGBaseObject(EBaseObjInitType::BOX, glm::vec3(0.0f, 2.0f, 0.0f)));
+    REGISTER_OBJ_TECH(0, new CGBaseObject(EBaseObjInitType::BOX, glm::vec3(-4.0f, 2.0f, 0.0f)));
+    REGISTER_OBJ_TECH(0, new CGBaseObject(EBaseObjInitType::BOX, glm::vec3(4.0f, 2.0f, 0.0f)));
     g_Engine->Renderer()->RecreateCommandBuffer();
 }
 
@@ -79,6 +85,9 @@ int _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, in
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
+
+        // #TMP
+        g_Engine->ParticleMgr()->EmitParticles(0, 1);
 
         g_Engine->Frame();
 

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Camera.h"
 
-const float CCamera::DEFAULT_MOVE_SPEED = 0.02f;
+const float CCamera::DEFAULT_MOVE_SPEED = 5.0f;
 const glm::vec3 CCamera::WORLD_UP = glm::vec3(0.0f, 1.0f, 0.0f);
 
 SCamMemento::SCamMemento(CCamera* cam)

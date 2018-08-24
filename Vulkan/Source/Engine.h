@@ -55,6 +55,10 @@ public:
 
     // Misc Getters
     inline CCamera* Camera() const { return m_Camera; }
+    inline bool IsFramerateLocked() const { return m_LockTo60FPS; }
+
+    // Misc Setters
+    inline void LockFramerate(bool val) { m_LockTo60FPS = val; }
 
     // Misc
     void RecordCommandBuffer(VkCommandBuffer& cmd_buff);
@@ -80,9 +84,11 @@ private:
 
     // Timer
     double                      m_LastFrameTime = 0.0;
-    CTimer                      m_FrameTimer = CTimer(ETimerType::MiliSeconds);
+    CTimer                      m_FrameTimer = CTimer(ETimerType::Seconds);
+    CTimer                      m_FrameLockTimer = CTimer(ETimerType::Seconds);
 
     // Misc
     bool                        m_CmdBuffersResetRequested = false;
+    bool                        m_LockTo60FPS = false;
 };
 

@@ -4,7 +4,7 @@
 #ifdef _DEBUG
 #include <string>
 #include <sstream>
-#endif;
+#endif
 
 using namespace std;
 using namespace physx;

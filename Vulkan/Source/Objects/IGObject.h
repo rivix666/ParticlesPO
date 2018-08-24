@@ -28,13 +28,13 @@ public:
     virtual size_t GetVerticesSize() const = 0;
     virtual size_t GetIndexSize() const = 0;
     virtual size_t GetIndicesSize() const = 0;
-    virtual uint32_t   GetIndicesCount() const = 0;
-    virtual uint32_t   GetVerticesCount() const = 0;
+    virtual uint32_t GetIndicesCount() const = 0;
+    virtual uint32_t GetVerticesCount() const = 0;
 
-    virtual void*  GetVerticesPtr() = 0;
-    virtual void*  GetIndicesPtr() = 0;
+    virtual void* GetVerticesPtr() = 0;
+    virtual void* GetIndicesPtr() = 0;
 
-    virtual void*  GetUniBuffData() { return nullptr; };
+    virtual void* GetUniBuffData() { return nullptr; };
 
     void SetTechId(uint32_t tech_id) { m_TechId = tech_id; }
     uint32_t TechniqueId() const { return m_TechId; }
@@ -43,9 +43,9 @@ public:
     const glm::mat4& WorldMtx() const { return m_WorldMtx; }
 
     // Matrix operations
-    void Translate(const glm::vec3& pos) { m_WorldMtx = glm::translate(m_WorldMtx, pos); }
-    void Rotate(const float& angle, const glm::vec3& axes) { m_WorldMtx = glm::rotate(m_WorldMtx, angle, axes); }
-    void Scale(const glm::vec3& scale) { m_WorldMtx = glm::scale(m_WorldMtx, scale);}
+    virtual void Translate(const glm::vec3& pos) { m_WorldMtx = glm::translate(m_WorldMtx, pos); }
+    virtual void Rotate(const float& angle, const glm::vec3& axes) { m_WorldMtx = glm::rotate(m_WorldMtx, angle, axes); }
+    virtual void Scale(const glm::vec3& scale) { m_WorldMtx = glm::scale(m_WorldMtx, scale);}
 
     // Buffers getters
     const VkBuffer& IndexBuffer() const { return m_IndexBuffer; }

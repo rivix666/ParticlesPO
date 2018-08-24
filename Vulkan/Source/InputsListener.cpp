@@ -69,14 +69,18 @@ void input::HandlePress(GLFWwindow* window, const int& key, const int& scancode,
         g_Engine->Camera()->MoveFreeCam(ECamMoveDir::UP, true);
         break;
     }
+    case GLFW_KEY_V:
+    {
+        g_Engine->LockFramerate(!g_Engine->IsFramerateLocked());
+    }
     case GLFW_KEY_LEFT_SHIFT:
     {
-        g_Engine->Camera()->SetMoveSpeed(0.3f);
+        g_Engine->Camera()->SetMoveSpeed(CCamera::DEFAULT_MOVE_SPEED * 4.0f);
         break;
     }
     case GLFW_KEY_LEFT_CONTROL:
     {
-        g_Engine->Camera()->SetMoveSpeed(0.005f);
+        g_Engine->Camera()->SetMoveSpeed(CCamera::DEFAULT_MOVE_SPEED / 4.0f);
         break;
     }
 

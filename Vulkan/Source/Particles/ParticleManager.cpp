@@ -4,6 +4,18 @@
 #include "../Techs/TechniqueManager.h"
 #include "../DescriptorManager.h"
 
+SParticleBufferData::SParticleBufferData()
+{
+    CPU2Px.resize(PARTICLE_BUFF_SIZE);
+    Particles.resize(PARTICLE_BUFF_SIZE);
+    for (int i = 0; i < PARTICLE_BUFF_SIZE; i++)
+    {
+        PxPool.push_back(PARTICLE_BUFF_SIZE - i - 1);
+        Particles[i].pos = glm::vec3(0.0f, -1.0f, 0.0f);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////
 CParticleManager::~CParticleManager()
 {
     utils::DeletePtrVec(m_Emitters);
@@ -13,7 +25,7 @@ bool CParticleManager::Init()
 {
     // Create Vertex Buffer
     g_Engine->Renderer()->CreateBuffer(
-        PARTICLE_BUFF_SIZE * IEmitter::SingleParticleSize(), 
+        PARTICLE_BUFF_SIZE * sizeof(ParticleVertex), 
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
         m_VertexBuffer, 
@@ -22,8 +34,6 @@ bool CParticleManager::Init()
     // Init emitters buffers
     uint32_t techs = g_Engine->TechMgr()->TechniquesCount();
     m_Tech2Emi.resize(techs);
-    m_Tech2PCount.resize(techs);
-
     return true;
 }
 
@@ -41,30 +51,32 @@ bool CParticleManager::Shutdown()
 
 void CParticleManager::Simulate()
 {
-    uint32_t old_num = m_ParticlesNum;
+    static uint32_t old_num = m_PartData.CPUFree;
 
-    // Clear old counters
-    m_ParticlesNum = 0;
-    for (auto& ui : m_Tech2PCount)
-        ui = 0;
+    // Emit long emitted particles
+    // EmitParticlesInTime();
 
+    // Simulate all particles
     for (auto emit : m_Emitters)
     {
         emit->Simulate();
-        m_Tech2PCount[emit->TechId()] += emit->ParticlesCount();
-        m_ParticlesNum += emit->ParticlesCount();
     }
-    if (m_ParticlesNum != old_num)
+
+    // If particle number changed, request command buffer reset
+    if (m_PartData.CPUFree != old_num)
         g_Engine->RequestCommandBufferReset();
+
+    // Store particles number after simulate
+    old_num = m_PartData.CPUFree;
 }
 
 void CParticleManager::UpdateBuffers()
 {
-    if (m_ParticlesNum < 1)
+    if (m_PartData.CPUFree < 1)
         return;
 
     // Create staging buffer
-    VkDeviceSize bufferSize = m_ParticlesNum * IEmitter::SingleParticleSize();
+    VkDeviceSize bufferSize = m_PartData.CPUFree * sizeof(ParticleVertex);
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
     g_Engine->Renderer()->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
@@ -72,29 +84,7 @@ void CParticleManager::UpdateBuffers()
     // Map staging buffer
     void* data;
     vkMapMemory(g_Engine->Device(), stagingBufferMemory, 0, bufferSize, 0, &data);
-
-    size_t offset = 0;
-    for (uint32_t i = 0; i < m_Tech2Emi.size(); i++)
-    {
-        if (m_Tech2Emi[i].empty() || m_Tech2PCount[i] < 1)
-            continue;
-
-        for (auto* emi : m_Tech2Emi[i])
-        {
-            if (!emi)
-                continue;
-
-            #ifdef _DEBUG
-            if (offset + emi->ParticlesSize() > bufferSize)
-            {
-                utils::FatalError(g_Engine->Hwnd(), "Particles won't fit in the buffer!");
-            }
-            #endif
-
-            memcpy(data, emi->ParticlesData(), (size_t)bufferSize);
-            offset += emi->ParticlesSize();
-        }
-    }
+    memcpy(data, m_PartData.Particles.data(), (size_t)bufferSize);
 
     // Unmap staging buffer and copy its data into vertex buffer
     vkUnmapMemory(g_Engine->Device(), stagingBufferMemory);
@@ -107,37 +97,42 @@ void CParticleManager::UpdateBuffers()
 
 void CParticleManager::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
 {
-    if (m_ParticlesNum < 1)
+    if (m_PartData.CPUFree < 1)
         return;
 
-    uint32_t offset = 0;
     auto tech_mgr = g_Engine->TechMgr();
-    for (uint32_t i = 0; i < m_Tech2Emi.size(); i++)
+    auto tech = tech_mgr->GetTechnique(1); //#PARTICLES TMP!!
+
+    // Bind Pipeline
+    vkCmdBindPipeline(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipeline());
+
+    // Bind Descriptor Sets
+    std::vector<VkDescriptorSet> desc_sets = {
+        g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::GENERAL),
+        g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::PARTICLES),
+        g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::DEPTH)
+    };
+    vkCmdBindDescriptorSets(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipelineLayout(), 0, (uint32_t)desc_sets.size(), desc_sets.data(), 0, nullptr);
+
+    // Bind Vertex buffer
+    VkBuffer vertexBuffers[] = { m_VertexBuffer };
+    VkDeviceSize offsets[] = { 0 };
+    vkCmdBindVertexBuffers(cmd_buff, 0, 1, vertexBuffers, offsets);
+    vkCmdDraw(cmd_buff, m_PartData.CPUFree, 1, 0, 0);
+}
+
+void CParticleManager::EmitParticles(const uint32_t& idx, const uint32_t& count, const double& in_time /*= 0.0*/)
+{
+    if (m_Emitters.size() <= idx || count == 0)
+        return;
+
+    if (in_time <= 0.0)
     {
-        if (m_Tech2Emi[i].empty())
-            continue;
-
-        auto tech = tech_mgr->GetTechnique(i);
-
-        // Bind Pipeline
-        vkCmdBindPipeline(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipeline());
-
-        // Bind Descriptor Sets
-        std::vector<VkDescriptorSet> desc_sets = { 
-            g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::GENERAL), 
-            g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::PARTICLES),
-            g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::DEPTH)
-        };
-        vkCmdBindDescriptorSets(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipelineLayout(), 0, (uint32_t)desc_sets.size(), desc_sets.data(), 0, nullptr);  //#UNI_BUFF
-
-        // Bind Vertex buffer
-        VkBuffer vertexBuffers[] = { m_VertexBuffer };
-        VkDeviceSize offsets[] = { 0 };
-        vkCmdBindVertexBuffers(cmd_buff, 0, 1, vertexBuffers, offsets);
-        vkCmdDraw(cmd_buff, (uint32_t)(m_Tech2PCount[i]), 1, offset, 0);
-
-        offset += m_Tech2PCount[i];
+        m_Emitters[idx]->Emit(count);
+        return;
     }
+
+    m_LongEmitted.insert(new SLongEmit(in_time, idx, count));
 }
 
 int CParticleManager::RegisterEmitter(IEmitter* emitter, int id /*= -1*/)
@@ -167,6 +162,7 @@ int CParticleManager::RegisterEmitter(IEmitter* emitter, int id /*= -1*/)
     }
 
     // Register emitter
+    emitter->SetEmitterId(tmp_id);
     m_Emitters[tmp_id] = emitter;
     m_Tech2Emi[emitter->TechId()].push_back(emitter);
 }
@@ -186,6 +182,9 @@ void CParticleManager::UnregisterEmitter(int id)
         {
             tech_vec.erase(it, it + 1);
         }
+
+        // Reset emitter id
+        emit->SetEmitterId(UINT32_MAX);
     }
 }
 
@@ -299,4 +298,37 @@ bool CParticleManager::RegisterUniBuffs()
         return false;
 
     return true;
+}
+
+void CParticleManager::EmitParticlesInTime()
+{
+    if (m_LongEmitted.empty())
+        return;
+
+    std::vector<SLongEmit*> to_release;
+    double last_frame_time = g_Engine->LastFrameTime();
+    for (auto* it : m_LongEmitted)
+    {
+        // Calc how many particles emit
+        double t_num = std::floor(it->t_left / last_frame_time);
+        uint32_t e_num = (uint32_t)std::floor((double)it->p_left / t_num);
+        if (e_num > it->p_left)
+            e_num = it->p_left;
+
+        // Emit particles
+        GetEmitter(it->e_idx)->Emit(e_num);
+
+        // Release if needed
+        it->p_left -= e_num;
+        it->t_left = (e_num == 0) ? it->t_left + last_frame_time : it->t_left - last_frame_time;
+        if (it->p_left == 0 || it->t_left <= 0.0)
+            to_release.push_back(it);
+    }
+
+    // Release
+    for (auto* tr : to_release)
+    {
+        m_LongEmitted.erase(tr);
+        DELETE(tr);
+    }
 }

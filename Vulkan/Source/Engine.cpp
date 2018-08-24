@@ -12,12 +12,10 @@
 // Misc includes
 #include "InputsListener.h"
 
-// #PARTICLES tymczasowe do testów
-#include "Particles/Emitters/BaseEmitter.h"
-
 CEngine::CEngine(GLFWwindow* window)
     : m_MainWnd(window)
 {
+    m_FrameTimer.startTimer();
 }
 
 CEngine::~CEngine()
@@ -96,19 +94,9 @@ bool CEngine::Init()
         if (!m_ParticleMgr->Init())
             return false;
 
-        // #PARTICLES tymczasowe do testów
-        auto em = new CBaseEmitter(1, 1000);
-        REGISTER_EMITTER(em, -1);
-        em->Emit(4);
-
-        auto em1 = new CBaseEmitter(1, 1000);
-        REGISTER_EMITTER(em1, -1);
-        em1->Emit(4);
-
         // Create Object control and camera
         m_ObjectControl = new CGObjectControl(m_Renderer->GetDevice());
         m_Camera = new CCamera();
-
         return true;
     }
     return false;
@@ -126,14 +114,24 @@ bool CEngine::RegisterTechniques()
 }
 
 void CEngine::Frame()
-{
-    // Start frame timer
-    m_FrameTimer.startTimer();
+{  
+    // Framerate lock
+    if (m_LockTo60FPS)
+    {
+        while (m_FrameLockTimer.getElapsedTime() < 0.0166) {}
+        m_FrameLockTimer.startTimer();
+    }
 
     // Update scene
     UpdateScene();
 
-    // Reset command bufers if needed
+    // Store elapsed time
+    m_LastFrameTime = m_FrameTimer.getElapsedTime();
+
+    // Reset frame timer before render
+    m_FrameTimer.startTimer();
+
+    // Reset command buffers if needed
     if (m_CmdBuffersResetRequested)
     {
         Renderer()->RecreateCommandBuffer();
@@ -143,18 +141,23 @@ void CEngine::Frame()
     // Render
     m_Renderer->PresentQueueWaitIdle();
     m_Renderer->Render();
-
-    // Store elapsed time
-    m_LastFrameTime = m_FrameTimer.getElapsedTime();
 }
 
 void CEngine::UpdateScene()
 {
+    // Move camera
     m_Camera->Update();
-    m_ObjectControl->UpdateUniBuffers();
+
+    // Simulate PhysX
     m_PxMgr->SimulatePhysX();
+
+    // Simulate/Update particles
     m_ParticleMgr->Simulate();
     m_ParticleMgr->UpdateBuffers();
+
+    // Update Objects
+    m_ObjectControl->UpdatePhysXActors();
+    m_ObjectControl->UpdateUniBuffers();
 }
 
 void CEngine::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
