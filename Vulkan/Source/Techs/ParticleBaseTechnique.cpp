@@ -38,8 +38,8 @@ void ParticleVertex::GetAttributeDescriptions(std::vector<VkVertexInputAttribute
 }
 
 //////////////////////////////////////////////////////////////////////////
-CParticleBaseTechnique::CParticleBaseTechnique()
-    : ITechnique()
+CParticleBaseTechnique::CParticleBaseTechnique(ITechnique* parent /*= nullptr*/)
+    : ITechnique(parent)
 {
 }
 

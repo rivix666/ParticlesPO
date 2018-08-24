@@ -44,6 +44,10 @@ public:
 
     // Emitters
     void EmitParticles(const uint32_t& idx, const uint32_t& count, const double& in_time = 0.0);
+    void ActivateEmitter(const uint32_t& idx, const uint32_t& count);
+    void DeactivateEmitter(const uint32_t& idx);
+    void DeactivateAllEmitters();
+    bool IsEmitterActive(const uint32_t& idx);
 
     // Emitter Register
     int  RegisterEmitter(CBaseEmitter* emitter, int id = -1);
@@ -59,11 +63,12 @@ public:
     bool CreateUniBuffers();
 
     // Typedefs // #TYPEDEFS zrobiæ porz¹dek w typedefach, przeniesc te czesciej u¿ywane do stdafx
-    typedef std::vector<uint32_t>           TUintVec;
+    typedef std::vector<uint32_t>               TUintVec;
     typedef std::vector<CBaseEmitter*>          TEmiVec;
-    typedef std::vector<TEmiVec>            TTechEmiVec;
-    typedef std::vector<VkBuffer>           TBufferVec;
-    typedef std::vector<VkDeviceMemory>     TBufferMemVec;
+    typedef std::map<CBaseEmitter*, uint32_t>   TEmiUintMap;
+    typedef std::vector<TEmiVec>                TTechEmiVec;
+    typedef std::vector<VkBuffer>               TBufferVec;
+    typedef std::vector<VkDeviceMemory>         TBufferMemVec;
 
 protected:
     // Uni Buffers
@@ -95,6 +100,7 @@ private:
     
     // Emitters
     TEmiVec                 m_Emitters;
+    TEmiUintMap             m_ActiveEmitters;
     TTechEmiVec             m_Tech2Emi;
     std::set<SLongEmit*>    m_LongEmitted;
 

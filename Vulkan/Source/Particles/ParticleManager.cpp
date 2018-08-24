@@ -56,6 +56,12 @@ void CParticleManager::Simulate()
     // Emit long emitted particles
     // EmitParticlesInTime();
 
+    // Emit particles from active emitters
+    for (const auto& p : m_ActiveEmitters)
+    {
+        p.first->Emit(p.second);
+    }
+
     // Simulate all particles
     for (auto emit : m_Emitters)
     {
@@ -133,6 +139,41 @@ void CParticleManager::EmitParticles(const uint32_t& idx, const uint32_t& count,
     }
 
     m_LongEmitted.insert(new SLongEmit(in_time, idx, count));
+}
+
+void CParticleManager::ActivateEmitter(const uint32_t& idx, const uint32_t& count)
+{
+    auto emit = GetEmitter(idx);
+    if (emit)
+    {
+        m_ActiveEmitters[emit] = count;
+    }
+}
+
+void CParticleManager::DeactivateEmitter(const uint32_t& idx)
+{
+    auto emit = GetEmitter(idx);
+    if (emit)
+    {
+        m_ActiveEmitters.erase(emit);
+    }
+}
+
+void CParticleManager::DeactivateAllEmitters()
+{
+    m_ActiveEmitters.clear();
+}
+
+bool CParticleManager::IsEmitterActive(const uint32_t& idx)
+{
+    auto emit = GetEmitter(idx);
+    if (emit)
+    {
+        const auto& it = m_ActiveEmitters.find(emit);
+        if (it != m_ActiveEmitters.end())
+            return true;
+    }
+    return false;
 }
 
 int CParticleManager::RegisterEmitter(CBaseEmitter* emitter, int id /*= -1*/)

@@ -16,7 +16,7 @@ layout (set = 1, binding = 3) uniform SParticleTechUniBuffer
     float burn;
     float max_size;
     int   texture_id;
-} tech_ubo[2]; 
+} tech_ubo[7]; 
 
 // Input
 layout (location = 0) in vec2       inTexCoord;

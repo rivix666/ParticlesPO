@@ -24,7 +24,7 @@ struct ParticleVertex
 class CParticleBaseTechnique : public ITechnique
 {
 public:
-    CParticleBaseTechnique();
+    CParticleBaseTechnique(ITechnique* parent = nullptr);
 
     // Buffers handle
     bool CreateRenderObjects() override;
@@ -47,4 +47,3 @@ protected:
 
     SParticleTechUniBuffer m_UniBuffData;
 };
-

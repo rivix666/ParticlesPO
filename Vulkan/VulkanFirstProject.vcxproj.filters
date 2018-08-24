@@ -96,6 +96,7 @@
     <ClInclude Include="Source\Particles\Emitters\BaseEmitter.h">
       <Filter>Particles\Emitters</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Techs\ParticleTechniques.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Utils\Timer.cpp">
@@ -160,6 +161,9 @@
     </ClCompile>
     <ClCompile Include="Source\Particles\Emitters\BaseEmitter.cpp">
       <Filter>Particles\Emitters</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Techs\ParticleTechniques.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -6,7 +6,8 @@ class CVulkanRenderer;
 class ITechnique
 {
 public:
-    ITechnique() = default;
+    // If Technique has a parent, It will use parent pipeline to record command buffer // #TECH_PARENT secure it later (crashes on shutdown, unregister etc.)
+    ITechnique(ITechnique* parent = nullptr);
     virtual ~ITechnique();
 
     // Typedefs
@@ -18,8 +19,8 @@ public:
     virtual bool                CreateGraphicsPipeline();
 
     // Getters
-    VkPipeline                  GetPipeline() const { return m_GraphicsPipeline; }
-    VkPipelineLayout            GetPipelineLayout() const  { return m_PipelineLayout; }
+    VkPipeline                  GetPipeline() const;
+    VkPipelineLayout            GetPipelineLayout() const;
 
     // UniBuff getters          // #TECHS Should allow use uni buffers arrays
     virtual VkBuffer            UniBuffer() const { return nullptr; }
@@ -58,5 +59,8 @@ protected:
 
     // Renderer
     CVulkanRenderer*            m_Renderer = nullptr;
+
+    // Parent Tech
+    ITechnique*                 m_Parent = nullptr;
 };
 

@@ -8,6 +8,7 @@
 #include "Techs/BaseTechnique.h"
 #include "Techs/TechniqueManager.h"
 #include "Techs/ParticleBaseTechnique.h"
+#include "Techs/ParticleTechniques.h"
 
 // Misc includes
 #include "InputsListener.h"
@@ -106,8 +107,31 @@ bool CEngine::RegisterTechniques()
 {
     if (m_TechMgr)
     {
+        // Register Objects techniques
         CGBaseObject::s_TechId = REGISTER_TECH(BaseVertex, new CBaseTechnique);
-        REGISTER_TECH(ParticleVertex, new CParticleBaseTechnique);
+
+        // Register Particles techniques
+        auto base_tech = new CParticleBaseTechnique();
+        REGISTER_TECH(ParticleVertex, base_tech);
+        auto flame_tech = new CParticleFlameTechnique(base_tech);
+        REGISTER_TECH(ParticleVertex, flame_tech);
+        auto smoke_tech = new CParticleSmokeTechnique(base_tech);
+        REGISTER_TECH(ParticleVertex, smoke_tech);
+        auto debris_tech = new CParticleDebrisTechnique(base_tech);
+        REGISTER_TECH(ParticleVertex, debris_tech);
+        auto flare_tech = new CParticleFlareTechnique(base_tech);
+        REGISTER_TECH(ParticleVertex, flare_tech);
+        auto halo_flare_tech = new CParticleHaloFlareTechnique(base_tech);
+        REGISTER_TECH(ParticleVertex, halo_flare_tech);
+
+        // #PARTICLES vkCreatePipelineLayout(): max per-stage uniform buffer bindings count (16) exceeds device maxPerStageDescriptorUniformBuffers limit (15). 
+        // The spec valid usage text states 'The total number of descriptors of the type VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER and VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC 
+        // accessible to any shader stage across all elements of pSetLayouts must be less than or equal to VkPhysicalDeviceLimits::maxPerStageDescriptorUniformBuffers
+        //////////////////////////////////////////////////////////////////////////
+        // #PARTICLES Toc mogê mieæ jedno ubo a w œrodku tablice wartoœci <face-palm>
+        //auto round_sparks_tech = new CParticleRoundSparksTechnique(base_tech);
+        //REGISTER_TECH(ParticleVertex, round_sparks_tech);
+
         return true;
     }
     return false;

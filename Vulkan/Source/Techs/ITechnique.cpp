@@ -1,6 +1,11 @@
 #include "stdafx.h"
 #include "ITechnique.h"
 
+ITechnique::ITechnique(ITechnique* parent /*= nullptr*/)
+    : m_Parent(parent)
+{
+}
+
 ITechnique::~ITechnique()
 {
     DestroyRenderObjects();
@@ -21,10 +26,16 @@ bool ITechnique::Shutdown()
     if (m_Renderer)
     {
         if (m_GraphicsPipeline)
+        {
             vkDestroyPipeline(m_Renderer->GetDevice(), m_GraphicsPipeline, nullptr);
+            m_GraphicsPipeline = nullptr;
+        }
 
         if (m_PipelineLayout)
+        {
             vkDestroyPipelineLayout(m_Renderer->GetDevice(), m_PipelineLayout, nullptr);
+            m_PipelineLayout = nullptr;
+        }
 
         m_Renderer = nullptr;
     }
@@ -34,6 +45,13 @@ bool ITechnique::Shutdown()
 
 bool ITechnique::CreateGraphicsPipeline()
 {
+    if (m_Parent)
+    {
+        if (m_Parent->GetPipeline() && m_Parent->GetPipelineLayout())
+            return true;
+        return utils::FatalError(g_Engine->Hwnd(), "Invalid Technique parent");
+    }
+
     // Shaders
     SShaderParams shaders_params;
     GetShadersDesc(shaders_params);
@@ -96,6 +114,16 @@ bool ITechnique::CreateGraphicsPipeline()
         return utils::FatalError(g_Engine->Hwnd(), "Failed to create graphics pipeline");
 
     return true;
+}
+
+VkPipeline ITechnique::GetPipeline() const
+{
+    return m_Parent ? m_Parent->GetPipeline() : m_GraphicsPipeline;
+}
+
+VkPipelineLayout ITechnique::GetPipelineLayout() const
+{
+    return m_Parent ? m_Parent->GetPipelineLayout() : m_PipelineLayout;
 }
 
 void ITechnique::GetInputAssemblyDesc(VkPipelineInputAssemblyStateCreateInfo& inputAssembly)

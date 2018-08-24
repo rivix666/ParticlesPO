@@ -1,6 +1,4 @@
 #include "stdafx.h"
-
-// #TMP
 #include "Objects/GBaseObject.h"
 #include "Particles/Emitters/BaseEmitter.h" 
 
@@ -39,11 +37,6 @@ bool InitEngine()
         return false;
     }
 
-    // #TMP
-    auto em1 = new CBaseEmitter(1, 1000);
-    REGISTER_EMITTER(em1, -1);
-    em1->SetPos(glm::vec3(0.0f, 6.0f, 0.0f));
-
     return true;
 }
 
@@ -54,6 +47,29 @@ void RegisterBaseObjects()
     REGISTER_OBJ_TECH(0, new CGBaseObject(EBaseObjInitType::BOX, glm::vec3(-4.0f, 2.0f, 0.0f)));
     REGISTER_OBJ_TECH(0, new CGBaseObject(EBaseObjInitType::BOX, glm::vec3(4.0f, 2.0f, 0.0f)));
     g_Engine->Renderer()->RecreateCommandBuffer();
+}
+
+void RegisterEmitters()
+{
+    auto tmp = new CBaseEmitter(2, 1000);
+    REGISTER_EMITTER(tmp, -1);
+    tmp->SetPos(glm::vec3(-8.0f, 6.0f, 0.0f));
+
+    tmp = new CBaseEmitter(3, 1000);
+    REGISTER_EMITTER(tmp, -1);
+    tmp->SetPos(glm::vec3(-4.0f, 6.0f, 0.0f));
+
+    tmp = new CBaseEmitter(4, 1000);
+    REGISTER_EMITTER(tmp, -1);
+    tmp->SetPos(glm::vec3(0.0f, 6.0f, 0.0f));
+
+    tmp = new CBaseEmitter(5, 1000);
+    REGISTER_EMITTER(tmp, -1);
+    tmp->SetPos(glm::vec3(4.0f, 6.0f, 0.0f));
+
+    tmp = new CBaseEmitter(6, 1000);
+    REGISTER_EMITTER(tmp, -1);
+    tmp->SetPos(glm::vec3(8.0f, 6.0f, 0.0f));
 }
 
 // Shutdown
@@ -81,13 +97,11 @@ int _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, in
         return Shutdown();
 
     RegisterBaseObjects();
+    RegisterEmitters();
 
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
-
-        // #TMP
-        g_Engine->ParticleMgr()->EmitParticles(0, 1);
 
         g_Engine->Frame();
 

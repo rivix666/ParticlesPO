@@ -27,7 +27,7 @@ layout(set = 1, binding = 3) uniform SParticleTechUniBuffer
     float burn;
     float max_size;
     int   texture_id;
-} tech_ubo[2]; 
+} tech_ubo[7]; 
 
 // Describes what kind of primitives our shader should process
 layout (points) in;

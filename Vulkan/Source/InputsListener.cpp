@@ -69,10 +69,6 @@ void input::HandlePress(GLFWwindow* window, const int& key, const int& scancode,
         g_Engine->Camera()->MoveFreeCam(ECamMoveDir::UP, true);
         break;
     }
-    case GLFW_KEY_V:
-    {
-        g_Engine->LockFramerate(!g_Engine->IsFramerateLocked());
-    }
     case GLFW_KEY_LEFT_SHIFT:
     {
         g_Engine->Camera()->SetMoveSpeed(CCamera::DEFAULT_MOVE_SPEED * 4.0f);
@@ -84,8 +80,46 @@ void input::HandlePress(GLFWwindow* window, const int& key, const int& scancode,
         break;
     }
 
-    // Objects/UniBuff debug
-#ifdef _DEBUG
+    // Emitters
+    case GLFW_KEY_1:
+    {
+        TryToActivateEmitter(0, 1);
+        break;
+    }
+    case GLFW_KEY_2:
+    {
+        TryToActivateEmitter(1, 1);
+        break;
+    }
+    case GLFW_KEY_3:
+    {
+        TryToActivateEmitter(2, 1);
+        break;
+    }
+    case GLFW_KEY_4:
+    {
+        TryToActivateEmitter(3, 1);
+        break;
+    }
+    case GLFW_KEY_5:
+    {
+        TryToActivateEmitter(4, 1);
+        break;
+    }
+    case GLFW_KEY_0:
+    {
+        g_Engine->ParticleMgr()->DeactivateAllEmitters();
+        break;
+    }
+
+    // Misc
+    case GLFW_KEY_V:
+    {
+        g_Engine->LockFramerate(!g_Engine->IsFramerateLocked());
+        break;
+    }
+    
+    // Central object move
     case GLFW_KEY_LEFT:
     {
         glm::vec3 cur_pos(0.0f);
@@ -114,6 +148,9 @@ void input::HandlePress(GLFWwindow* window, const int& key, const int& scancode,
         g_Engine->ObjectControl()->GetTech2ObjVec().front()[1]->Translate(cur_pos);
         break;
     }
+
+    // Objects/UniBuff debug
+#ifdef _DEBUG
     case GLFW_KEY_INSERT:
     {
         if (debug_obj)
@@ -207,4 +244,12 @@ void input::MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 void input::ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
     g_Engine->Camera()->ChangeViewSphereRadius(yoffset);
+}
+
+void input::TryToActivateEmitter(const uint32_t& idx, const uint32_t& count)
+{
+    if (g_Engine->ParticleMgr()->IsEmitterActive(idx))
+        g_Engine->ParticleMgr()->DeactivateEmitter(idx);
+    else
+        g_Engine->ParticleMgr()->ActivateEmitter(idx, count);
 }
