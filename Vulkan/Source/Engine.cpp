@@ -9,6 +9,7 @@
 #include "Techs/TechniqueManager.h"
 #include "Techs/ParticleBaseTechnique.h"
 #include "Techs/ParticleTechniques.h"
+#include "Techs/ParticleSortCmpTechnique.h"
 
 // Misc includes
 #include "InputsListener.h"
@@ -83,16 +84,17 @@ bool CEngine::Init()
         if (!m_Renderer->Init())
             return false;
 
+        // #UNI_BUFF #DESC_MGR patrz CVulkanRenderer::Init
+        // Init Particle manager (It's need to be initialized after renderer and before Techniques)
+        // if (!m_ParticleMgr->Init())
+        //     return false;
+
         // Init Techniques manager (It's need to be initialized after renderer)
         m_TechMgr->InitTechniques();
 
         // Create and init Physics manager
         m_PxMgr = new CPxManager();
         if (!m_PxMgr->Init())
-            return false;
-
-        // Init Particle manager (It's need to be initialized after renderer and PhysX)
-        if (!m_ParticleMgr->Init())
             return false;
 
         // Create Object control and camera
@@ -121,16 +123,20 @@ bool CEngine::RegisterTechniques()
         REGISTER_TECH(ParticleVertex, debris_tech);
         auto flare_tech = new CParticleFlareTechnique(base_tech);
         REGISTER_TECH(ParticleVertex, flare_tech);
-        auto halo_flare_tech = new CParticleHaloFlareTechnique(base_tech);
-        REGISTER_TECH(ParticleVertex, halo_flare_tech);
+        //auto halo_flare_tech = new CParticleHaloFlareTechnique(base_tech);
+        //REGISTER_TECH(ParticleVertex, halo_flare_tech);
 
-        // #PARTICLES vkCreatePipelineLayout(): max per-stage uniform buffer bindings count (16) exceeds device maxPerStageDescriptorUniformBuffers limit (15). 
+        // #PARTICLES_ZYEB_TECH vkCreatePipelineLayout(): max per-stage uniform buffer bindings count (16) exceeds device maxPerStageDescriptorUniformBuffers limit (15). 
         // The spec valid usage text states 'The total number of descriptors of the type VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER and VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC 
         // accessible to any shader stage across all elements of pSetLayouts must be less than or equal to VkPhysicalDeviceLimits::maxPerStageDescriptorUniformBuffers
         //////////////////////////////////////////////////////////////////////////
-        // #PARTICLES Toc mogê mieæ jedno ubo a w œrodku tablice wartoœci <face-palm>
+        // #PARTICLES_ZYEB_TECH Toc mogê mieæ jedno ubo a w œrodku tablice wartoœci <face-palm>
         //auto round_sparks_tech = new CParticleRoundSparksTechnique(base_tech);
         //REGISTER_TECH(ParticleVertex, round_sparks_tech);
+
+        // #PARTICLES_ZYEB_TECH jednak to wyzej bardzo pwoazne trzeba szybko fixnac
+        // Register Compute techniques
+        REGISTER_TECH(ParticleSort, new CParticleSortCmpTechnique); //#TECH dorobic im jakeigos enumma bylatwiej sie je rozroznialo 
 
         return true;
     }

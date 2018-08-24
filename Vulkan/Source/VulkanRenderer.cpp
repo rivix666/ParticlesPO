@@ -53,6 +53,10 @@ bool CVulkanRenderer::Init()
         if (!CreateFramebuffers())
             return Shutdown();
 
+        // #UNI_BUFF #DESC_MGR Tymczasowo, trzeba to przemyœleæ, na razie gryzie siê z poni¿szym DescMgr()->CreateDescriptorSets(), bo compute sort technika rejestruje siê ju¿ po inicjalizacji renderera, a chce jeszcze descriptory porejestrowaæ
+        if (!g_Engine->ParticleMgr()->Init())
+            return Shutdown();
+
         // #UNI_BUFF #IMAGES
         if (!CreateTechsRenderObjects())
             return Shutdown();
@@ -63,6 +67,7 @@ bool CVulkanRenderer::Init()
          if (!CreateDescriptorPool())
              return Shutdown();
 
+         // #UNI_BUFF #DESC_MGR to napewno musi byæ tu? patrz wy¿ej
          if (!DescMgr()->CreateDescriptorLayouts())
              return Shutdown();
 
@@ -221,6 +226,22 @@ bool CVulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, 
         return utils::FatalError(g_Engine->Hwnd(), "Failed to allocate buffer memory");
 
     vkBindBufferMemory(m_Device, buffer, bufferMemory, 0);
+    return true;
+}
+
+bool CVulkanRenderer::CreateBufferView(VkBuffer buffer, VkFormat format, VkDeviceSize memory_offset, VkDeviceSize memory_range, VkBufferView& buffer_view)
+{
+    VkBufferViewCreateInfo view_info = {};
+    view_info.sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO;
+    view_info.pNext = nullptr;
+    view_info.flags = 0;
+    view_info.buffer = buffer;
+    view_info.format = format;
+    view_info.offset = memory_offset;
+    view_info.range = memory_range;
+
+    if (VKRESULT(vkCreateBufferView(GetDevice(), &view_info, nullptr, &buffer_view))) 
+        return utils::FatalError(g_Engine->Hwnd(), "Failed to create buffer view");
     return true;
 }
 

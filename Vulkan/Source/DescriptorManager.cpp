@@ -58,7 +58,7 @@ bool CDescriptorManager::CreateDescriptorLayouts()
 
             VkDescriptorSetLayoutBinding bin = {};
             bin.binding = j;
-            bin.descriptorCount = data.buffer.empty() ? data.sampler.size() : data.buffer.size();
+            bin.descriptorCount = data.sampler.size() + data.buffer.size() + data.texel_buffer_views.size();
             bin.descriptorType = data.type;
             bin.pImmutableSamplers = nullptr;
             bin.stageFlags = data.stage_flags;
@@ -182,6 +182,24 @@ void CDescriptorManager::UpdateDescriptorSet(const uint32_t& set)
             descriptorWrites.push_back(write);
             continue;
         }
+
+        //#DESC_MGR tak samo potraktowac te wy¿ej, bez babrania sie z milionem bufferow...
+        if (!data.texel_buffer_views.empty())
+        {
+            VkWriteDescriptorSet write;
+            write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write.pNext = nullptr;
+            write.dstSet = m_DescSets[set];
+            write.dstBinding = j;
+            write.dstArrayElement = 0;
+            write.descriptorType = data.type;
+            write.descriptorCount = data.texel_buffer_views.size();
+            write.pTexelBufferView = data.texel_buffer_views.data();
+            write.pImageInfo = nullptr;
+            write.pBufferInfo = nullptr;
+            descriptorWrites.push_back(write);
+            continue;
+        }
     }
 
     // Update Descriptor Sets
@@ -297,6 +315,28 @@ bool CDescriptorManager::RegisterDescriptor(const TSampVec& pairs, const TRangeS
     SDescSetData data;
     data.sampler = pairs;
     data.sizes = sizes;
+    data.type = type;
+    data.stage_flags = stage_flags;
+    data.is_valid = true;
+
+    // Create place for the new data
+    PreparePlace4Descriptors(set, location);
+
+    // Store data
+    m_DescData[set][location] = data;
+    m_DescDataCount[type]++;
+
+    return true;
+}
+
+bool CDescriptorManager::RegisterDescriptor(const TBuffsViewsVec& views, const VkDescriptorType& type, const VkShaderStageFlags& stage_flags, const uint32_t& set, const uint32_t& location)
+{
+    if (views.empty())
+        return utils::FatalError(g_Engine->Hwnd(), "Failed to register descriptor");
+
+    // Prepare data struct
+    SDescSetData data;
+    data.texel_buffer_views = views;
     data.type = type;
     data.stage_flags = stage_flags;
     data.is_valid = true;

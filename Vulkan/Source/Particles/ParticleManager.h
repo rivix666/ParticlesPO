@@ -1,6 +1,8 @@
 #pragma once
 #include "../Techs/ParticleBaseTechnique.h"
 
+#define PARTICLE_VERTEX_BUFF_SIZE PARTICLE_BUFF_SIZE * sizeof(ParticleVertex)
+
 #define REGISTER_EMITTER(emitter, id) g_Engine->ParticleMgr()->RegisterEmitter(emitter, id)
 
 class CBaseEmitter;
@@ -58,6 +60,9 @@ public:
     CBaseEmitter* GetEmitter(int id) const; 
 
     SParticleBufferData& BuffData() { return m_PartData; }
+
+    VkBuffer VertexBuffer() const { return m_VertexBuffer; }
+    VkDeviceMemory VertexBufferMemory() const { return m_VertexBufferMemory; }
 
     // Uni Buffers
     bool CreateUniBuffers();

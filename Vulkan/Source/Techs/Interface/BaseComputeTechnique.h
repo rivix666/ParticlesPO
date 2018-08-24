@@ -8,8 +8,6 @@ public:
     virtual ~CBaseComputeTechnique();
 
     // Init
-    bool                Init() override;
-    bool                Shutdown() override;
     bool                CreatePipeline() override;
 
 protected:

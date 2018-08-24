@@ -10,16 +10,6 @@ CBaseComputeTechnique::~CBaseComputeTechnique()
 {
 }
 
-bool CBaseComputeTechnique::Init()
-{
-    return true;
-}
-
-bool CBaseComputeTechnique::Shutdown()
-{
-    return true;
-}
-
 bool CBaseComputeTechnique::CreatePipeline()
 {
     if (m_Parent)
@@ -55,7 +45,10 @@ bool CBaseComputeTechnique::CreatePipeline()
 
 void CBaseComputeTechnique::GetPipelineLayoutDesc(VkPipelineLayoutCreateInfo& pipelineLayoutInfo)
 {
-    static std::vector<VkDescriptorSetLayout> lays = { g_Engine->DescMgr()->DescriptorSetLayout((uint32_t)EDescSetRole::GENERAL)};
+    static std::vector<VkDescriptorSetLayout> lays = { 
+        g_Engine->DescMgr()->DescriptorSetLayout((uint32_t)EDescSetRole::GENERAL),
+        g_Engine->DescMgr()->DescriptorSetLayout((uint32_t)EDescSetRole::COMPUTE)
+    };
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = (uint32_t)lays.size();
     pipelineLayoutInfo.pSetLayouts = lays.data();

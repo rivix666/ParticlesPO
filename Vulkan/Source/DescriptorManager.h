@@ -6,6 +6,7 @@ enum class EDescSetRole : uint32_t
     OBJECTS,
     PARTICLES,
     DEPTH,
+    COMPUTE,
 
     _COUNT_
 };
@@ -17,6 +18,7 @@ public:
 
     // Typedefs
     typedef std::vector<VkBuffer> TBuffsVec;
+    typedef std::vector<VkBufferView> TBuffsViewsVec;
     typedef std::vector<ITechnique::TImgSampler> TSampVec;
     typedef std::vector<size_t> TRangeSizes;
 
@@ -26,6 +28,7 @@ public:
         TBuffsVec buffer; // #DESC_MGR w przypadku arraya bufferow to powinien byc jeden duzy buffer z offsetami, jak bedzie czast o poprawic (patrz ParticleTextureManager.cpp)
         TSampVec sampler;
         TRangeSizes sizes;
+        TBuffsViewsVec texel_buffer_views;
         VkDescriptorType type = (VkDescriptorType) 0;
         VkShaderStageFlags stage_flags = (VkShaderStageFlags) 0;
 
@@ -74,6 +77,7 @@ public:
     // Descriptor registration
     bool RegisterDescriptor(const TBuffsVec& buffs, const TRangeSizes& sizes, const VkDescriptorType& type, const VkShaderStageFlags& stage_flags, const uint32_t& set, const uint32_t& location);
     bool RegisterDescriptor(const TSampVec& pairs, const TRangeSizes& sizes, const VkDescriptorType& type, const VkShaderStageFlags& stage_flags, const uint32_t& set, const uint32_t& location);
+    bool RegisterDescriptor(const TBuffsViewsVec& views, const VkDescriptorType& type, const VkShaderStageFlags& stage_flags, const uint32_t& set, const uint32_t& location);
     bool UnregisterDescriptor(const uint32_t& set, const uint32_t& location);
     void ClearAllRegisteredData();
 

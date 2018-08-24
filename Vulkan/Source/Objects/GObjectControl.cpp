@@ -80,6 +80,9 @@ void CGObjectControl::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
     uint32_t tech_count = m_TechToObjVec.size();
     for (uint32_t i = 0; i < tech_count; i++)
     {
+        if (m_TechToObjVec[i].empty())
+            continue;
+
         auto tech = tech_mgr->GetTechnique(i);
         vkCmdBindPipeline(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipeline());
 

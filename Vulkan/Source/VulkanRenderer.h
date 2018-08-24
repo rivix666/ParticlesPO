@@ -27,12 +27,16 @@ public:
     VkBuffer CamUniBuffer() const { return m_CamUniBuffer; }
     VkDeviceMemory CamUniBufferMemory() const { return m_CamUniBufferMemory; }
 
+    // Command Buffers
+    VkCommandBuffer GetComputeCmdBuffer() const { return m_ComputeCommandBuffer; }
+
     // Descriptor Sets
     CDescriptorManager* DescMgr() const;
 
     // Buffers
     uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
     bool CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+    bool CreateBufferView(VkBuffer buffer, VkFormat format, VkDeviceSize memory_offset, VkDeviceSize memory_range, VkBufferView& buffer_view);
     void CopyBuffer(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize size);
 
     // Device properties
@@ -162,6 +166,7 @@ private:
 
     // Command buffers
     VkCommandPool m_CommandPool = nullptr;
+    VkCommandBuffer m_ComputeCommandBuffer = nullptr;
     std::vector<VkCommandBuffer> m_CommandBuffers;
 
     // Swap chain events synchronization

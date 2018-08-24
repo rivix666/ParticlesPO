@@ -19,8 +19,8 @@ public:
     virtual bool                CreatePipeline() = 0;
 
     // Getters
-    VkPipeline                  GetPipeline() const;
-    VkPipelineLayout            GetPipelineLayout() const;
+    virtual VkPipeline                  GetPipeline() const;
+    virtual VkPipelineLayout            GetPipelineLayout() const;
 
     // UniBuff getters          // #TECHS Should allow use uni buffers arrays
     virtual VkBuffer            UniBuffer() const { return nullptr; }

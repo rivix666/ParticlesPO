@@ -2,6 +2,7 @@
 
 class ITechnique;
 
+// #TECH_UGH rozdzielic rejestracje na dwa vectory, jeden dla graphics techs a drugi dla compute
 #define REGISTER_TECH(lay_struct_name, tech) g_Engine->TechMgr()->RegisterTechnique(#lay_struct_name, tech)
 
 class CTechniqueManager
@@ -28,7 +29,7 @@ public:
     // Getters
     uint32_t TechniquesCount() const;
     //uint32_t GetTechIdByLayoutName(const std::string& lay_name) const; // #TECH_UGH moze rejestrowac pod unikalna nazwa by moc fajnie wyciagac bo po co mi w sumie po typie
-    ITechnique* GetTechnique(const uint32_t& tech_id) const;
+    ITechnique* GetTechnique(const uint32_t& tech_id) const; // #TECH_UGH taaak po typie napewno wyleci, gryzie sie z compute shaderami
 
     // Recreate Techniques
     void InitTechniques();

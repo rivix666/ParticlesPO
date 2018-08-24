@@ -25,7 +25,7 @@ bool CParticleManager::Init()
 {
     // Create Vertex Buffer
     g_Engine->Renderer()->CreateBuffer(
-        PARTICLE_BUFF_SIZE * sizeof(ParticleVertex), 
+        PARTICLE_VERTEX_BUFF_SIZE,
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT, 
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
         m_VertexBuffer, 
@@ -107,18 +107,37 @@ void CParticleManager::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
         return;
 
     auto tech_mgr = g_Engine->TechMgr();
-    auto tech = tech_mgr->GetTechnique(1); //#PARTICLES TMP!!
+
+    // Compute Pipeline
+    //////////////////////////////////////////////////////////////////////////
+//     auto c_tech = tech_mgr->GetTechnique(6);
+// 
+//     // Bind Pipeline
+//     vkCmdBindPipeline(cmd_buff, VK_PIPELINE_BIND_POINT_COMPUTE, c_tech->GetPipeline());
+// 
+//     // Bind Descriptor Sets
+     std::vector<VkDescriptorSet> desc_sets;// = {
+//         g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::GENERAL),
+//         g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::COMPUTE)
+//     };
+//     vkCmdBindDescriptorSets(cmd_buff, VK_PIPELINE_BIND_POINT_COMPUTE, c_tech->GetPipelineLayout(), 0, (uint32_t)desc_sets.size(), desc_sets.data(), 0, nullptr);
+//     
+//     vkCmdDispatch(cmd_buff, PARTICLE_BUFF_SIZE / 32 + 1, 1, 1);
+
+    // Graphics Pipeline
+    //////////////////////////////////////////////////////////////////////////
+    auto g_tech = tech_mgr->GetTechnique(1); //#PARTICLES TMP!!
 
     // Bind Pipeline
-    vkCmdBindPipeline(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipeline());
+    vkCmdBindPipeline(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, g_tech->GetPipeline());
 
     // Bind Descriptor Sets
-    std::vector<VkDescriptorSet> desc_sets = {
+    desc_sets = {
         g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::GENERAL),
         g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::PARTICLES),
         g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::DEPTH)
     };
-    vkCmdBindDescriptorSets(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, tech->GetPipelineLayout(), 0, (uint32_t)desc_sets.size(), desc_sets.data(), 0, nullptr);
+    vkCmdBindDescriptorSets(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, g_tech->GetPipelineLayout(), 0, (uint32_t)desc_sets.size(), desc_sets.data(), 0, nullptr);
 
     // Bind Vertex buffer
     VkBuffer vertexBuffers[] = { m_VertexBuffer };
