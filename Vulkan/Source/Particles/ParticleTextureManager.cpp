@@ -62,7 +62,7 @@ bool CParticleTextureManager::Shutdown()
 
 void CParticleTextureManager::RegisterBaseTextures()
 {
-    REGISTER_P_TEX(Flame, 2.0f, 2.0f);
+    REGISTER_P_TEX(Flame, 8.0f, 7.0f);
     REGISTER_P_TEX(Smoke, 8.0f, 8.0f);
     REGISTER_P_TEX(Debris, 3.0f, 3.0f);
     REGISTER_P_TEX(Flare, 1.0f, 1.0f);
@@ -113,7 +113,7 @@ bool CParticleTextureManager::LoadParticleTextures()
 bool CParticleTextureManager::LoadParticleTexture(const EParticleTex& type)
 {
     auto& tex = m_Textures[(uint32_t)type];
-    image_utils::SImageParams params = { tex.m_TexturePath, true };
+    image_utils::SImageParams params = { tex.m_TexturePath, false };
     image_utils::CreateTextureImage(params);
 
     tex.m_TextureImage = params.out_texture_image;

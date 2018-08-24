@@ -2,8 +2,12 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_KHR_vulkan_glsl : enable
 
+// Const
+const int TEX_NUM = 7;
+const int COLORS_ID = 6;
+
 // Images
-layout (set = 1, binding = 0) uniform sampler2D texSamplers[7];
+layout (set = 1, binding = 0) uniform sampler2D texSamplers[TEX_NUM];
 
 // Uniform Buffers
 // Size of this array depends on registered techs
@@ -35,18 +39,10 @@ vec4 CalcControlAdditiveBlend(in vec4 color, in float burn)
 
 float CalcSoftParticles(in float depth)
 {
-    // DxSoftPart
-    /////////////////////////////////////////////////////////
     vec4 depthViewSample = vec4(gl_FragCoord.xy, depth, 1.0f);
     vec4 depthViewParticle = vec4(gl_FragCoord.xyz, 1.0f);
     float depthDiff = depthViewSample.z / depthViewSample.w - depthViewParticle.z / depthViewParticle.w;
     return clamp(depthDiff * 100.0f, 0.0f, 1.0f); // dzia³a przy mno¿eniu ale czemu? normalnie by³o / fadeFactor (czyli 1.0f)
-
-    // Nvidia
-    /////////////////////////////////////////////////////////
-    //float Input = (depth - gl_FragCoord.w) / 1.0f;
-    //float Output = 0.5 * pow( clamp( 2*(( Input > 0.5) ? 1-Input : Input), 0.0, 1.0 ), 2);
-    //depth = ( Input > 0.5) ? 1-Output : Output;
 }
 
 // Entry Points
@@ -56,12 +52,21 @@ void main()
     int tex_id = tech_ubo[inTechId].texture_id;
     vec4 col = texture(texSamplers[tex_id], inTexCoord);
 
+    // Sample colors gradient for given texture_id
+    float one_col_size = (1.0f / float(COLORS_ID));
+    float g_tex_h = one_col_size * float(tex_id) + (one_col_size / 2.0);
+    vec4 g_col = texture(texSamplers[COLORS_ID], vec2(inLife, g_tex_h));
+    
+    // Color particle
+    col.r *= g_col.b;
+    col.g *= g_col.g;
+    col.b *= g_col.r;
+
     // Get previous depth value for current fragment
     float depthFade = CalcSoftParticles(subpassLoad(inputAttachment).x);
 
-    // Modify alpha channel by particle life and depthFade
+    // Modify alpha channel by particle depthFade
     col.a *= depthFade;
-    //col.a *= inLife;
 
     // Change colors with burn modifier
     col = CalcControlAdditiveBlend(col, tech_ubo[inTechId].burn);

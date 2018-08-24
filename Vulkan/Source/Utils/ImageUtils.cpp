@@ -228,6 +228,8 @@ VkFormat image_utils::MapGliFormat2VkFormat(int gli_format_type)
         return VkFormat::VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
     case gli::texture::format_type::FORMAT_BGRA8_UNORM_PACK8:
         return VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
+    case gli::texture::format_type::FORMAT_BGR8_UNORM_PACK8:
+        return VkFormat::VK_FORMAT_R8G8B8_UNORM; // #IMAGES nie dzia³a i chuj jebany tilling chuj w dupe vulkanowi
     }
     utils::FatalError(g_Engine->Hwnd(), "Unknown texture format");
     return VkFormat::VK_FORMAT_UNDEFINED;
