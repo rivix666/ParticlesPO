@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ParticleManager.h"
-#include "Emitters/IEmitter.h"
+#include "Emitters/BaseEmitter.h"
 #include "../Techs/TechniqueManager.h"
 #include "../DescriptorManager.h"
 
@@ -135,7 +135,7 @@ void CParticleManager::EmitParticles(const uint32_t& idx, const uint32_t& count,
     m_LongEmitted.insert(new SLongEmit(in_time, idx, count));
 }
 
-int CParticleManager::RegisterEmitter(IEmitter* emitter, int id /*= -1*/)
+int CParticleManager::RegisterEmitter(CBaseEmitter* emitter, int id /*= -1*/)
 {
     if (!emitter)
         return -1;
@@ -169,7 +169,7 @@ int CParticleManager::RegisterEmitter(IEmitter* emitter, int id /*= -1*/)
 
 void CParticleManager::UnregisterEmitter(int id)
 {
-    IEmitter* emit = m_Emitters[id];
+    CBaseEmitter* emit = m_Emitters[id];
     if (emit)
     {
         // Remove from emitters
@@ -188,7 +188,7 @@ void CParticleManager::UnregisterEmitter(int id)
     }
 }
 
-int CParticleManager::FindEmitterId(IEmitter* emitter) const
+int CParticleManager::FindEmitterId(CBaseEmitter* emitter) const
 {
     auto it = std::find(m_Emitters.begin(), m_Emitters.end(), emitter);
     if (it != m_Emitters.end())
@@ -196,7 +196,7 @@ int CParticleManager::FindEmitterId(IEmitter* emitter) const
     return -1;
 }
 
-IEmitter* CParticleManager::GetEmitter(int id) const
+CBaseEmitter* CParticleManager::GetEmitter(int id) const
 {
     return m_Emitters[id];
 }

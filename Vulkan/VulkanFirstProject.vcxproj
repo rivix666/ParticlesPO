@@ -173,7 +173,6 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     <ClInclude Include="Source\Utils\ImageUtils.h" />
     <ClInclude Include="Source\Objects\stdafx.h" />
     <ClInclude Include="Source\Particles\Emitters\BaseEmitter.h" />
-    <ClInclude Include="Source\Particles\Emitters\IEmitter.h" />
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\InputsListener.h" />
     <ClInclude Include="Source\Particles\Emitters\stdafx.h" />
@@ -200,7 +199,6 @@ copy /y $(ProjectDir)Effects\*.spv  $(OutDir)Effects\</Command>
     <ClCompile Include="Source\DescriptorManager.cpp" />
     <ClCompile Include="Source\Utils\ImageUtils.cpp" />
     <ClCompile Include="Source\Particles\Emitters\BaseEmitter.cpp" />
-    <ClCompile Include="Source\Particles\Emitters\IEmitter.cpp" />
     <ClCompile Include="Source\Camera.cpp" />
     <ClCompile Include="Source\InputsListener.cpp" />
     <ClCompile Include="Source\Particles\ParticleManager.cpp" />

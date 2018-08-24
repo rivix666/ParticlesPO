@@ -38,9 +38,6 @@
     <ClInclude Include="Source\Particles\stdafx.h">
       <Filter>Particles</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Particles\Emitters\IEmitter.h">
-      <Filter>Particles\Emitters</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Particles\Emitters\stdafx.h">
       <Filter>Particles\Emitters</Filter>
     </ClInclude>
@@ -89,7 +86,6 @@
     <ClInclude Include="Source\stdafx.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Particles\Emitters\BaseEmitter.h" />
     <ClInclude Include="Source\Techs\ParticleBaseTechnique.h" />
     <ClInclude Include="Source\Utils\ImageUtils.h" />
     <ClInclude Include="Source\Utils\ShaderUtils.h">
@@ -97,6 +93,9 @@
     </ClInclude>
     <ClInclude Include="Source\DescriptorManager.h" />
     <ClInclude Include="Source\Particles\ParticleTextureManager.h" />
+    <ClInclude Include="Source\Particles\Emitters\BaseEmitter.h">
+      <Filter>Particles\Emitters</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Utils\Timer.cpp">
@@ -126,9 +125,6 @@
     <ClCompile Include="Source\Particles\ParticleManager.cpp">
       <Filter>Particles</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Particles\Emitters\IEmitter.cpp">
-      <Filter>Particles\Emitters</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Objects\IGObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
@@ -147,9 +143,6 @@
     <ClCompile Include="Source\Techs\TechniqueManager.cpp">
       <Filter>Techs</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Particles\Emitters\BaseEmitter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Techs\ParticleBaseTechnique.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -164,6 +157,9 @@
     </ClCompile>
     <ClCompile Include="Source\Particles\ParticleTextureManager.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Particles\Emitters\BaseEmitter.cpp">
+      <Filter>Particles\Emitters</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

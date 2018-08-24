@@ -3,7 +3,7 @@
 
 #define REGISTER_EMITTER(emitter, id) g_Engine->ParticleMgr()->RegisterEmitter(emitter, id)
 
-class IEmitter;
+class CBaseEmitter;
 
 struct SParticleIdx
 {
@@ -46,12 +46,12 @@ public:
     void EmitParticles(const uint32_t& idx, const uint32_t& count, const double& in_time = 0.0);
 
     // Emitter Register
-    int  RegisterEmitter(IEmitter* emitter, int id = -1);
+    int  RegisterEmitter(CBaseEmitter* emitter, int id = -1);
     void UnregisterEmitter(int id);
 
     // Getters/Setters
-    int FindEmitterId(IEmitter* emitter) const;
-    IEmitter* GetEmitter(int id) const; 
+    int FindEmitterId(CBaseEmitter* emitter) const;
+    CBaseEmitter* GetEmitter(int id) const; 
 
     SParticleBufferData& BuffData() { return m_PartData; }
 
@@ -60,7 +60,7 @@ public:
 
     // Typedefs // #TYPEDEFS zrobiæ porz¹dek w typedefach, przeniesc te czesciej u¿ywane do stdafx
     typedef std::vector<uint32_t>           TUintVec;
-    typedef std::vector<IEmitter*>          TEmiVec;
+    typedef std::vector<CBaseEmitter*>          TEmiVec;
     typedef std::vector<TEmiVec>            TTechEmiVec;
     typedef std::vector<VkBuffer>           TBufferVec;
     typedef std::vector<VkDeviceMemory>     TBufferMemVec;
