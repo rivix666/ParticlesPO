@@ -89,6 +89,6 @@ private:
 
     // Misc
     bool                        m_CmdBuffersResetRequested = false;
-    bool                        m_LockTo60FPS = false;
+    bool                        m_LockTo60FPS = true;
 };
 

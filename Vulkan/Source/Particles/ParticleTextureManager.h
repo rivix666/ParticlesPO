@@ -11,7 +11,7 @@ enum EParticleTex
     HaloFlare,
     RoundSparks,
 
-    COLORS, // #PARTICLES colors id can be pushed as 'push constant'
+    COLORS, // Needs to be last (it's hardcoded in shaders)
 
     _COUNT_
 };

@@ -179,6 +179,15 @@ bool CParticleTextureManager::RegisterImageViews()
         g_Engine->Renderer()->DescMgr()->GetNextFreeLocationId((uint32_t)EDescSetRole::PARTICLES)))
         return false;
 
+    // Register EParticleTex::COLORS as image view in Geometry Shader (so we can took alpha and use it as particle size)
+    if (!g_Engine->Renderer()->DescMgr()->RegisterDescriptor(
+        { ITechnique::TImgSampler(m_Textures[EParticleTex::COLORS].m_ImageView, m_Textures[EParticleTex::COLORS].m_Sampler) }, {},
+        VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+        VK_SHADER_STAGE_GEOMETRY_BIT,
+        (uint32_t)EDescSetRole::PARTICLES,
+        g_Engine->Renderer()->DescMgr()->GetNextFreeLocationId((uint32_t)EDescSetRole::PARTICLES)))
+        return false;
+
     return true;
 }
 

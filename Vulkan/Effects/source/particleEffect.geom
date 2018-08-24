@@ -1,4 +1,12 @@
 #version 450
+#extension GL_KHR_vulkan_glsl : enable
+
+// Const
+const int TEX_NUM = 7;
+const int COLORS_ID = 6;
+
+// Images
+layout (set = 1, binding = 1) uniform sampler2D colSampler;
 
 // Uniform Buffers
 layout(set = 0, binding = 0) uniform SCamUniBuffer
@@ -7,14 +15,14 @@ layout(set = 0, binding = 0) uniform SCamUniBuffer
     mat4 proj;
 } cam_ubo;
 
-layout(set = 1, binding = 1) uniform SParticleTexUniBuffer
+layout(set = 1, binding = 2) uniform SParticleTexUniBuffer
 {
     float atlas_width;
     float atlas_height;
 } tex_ubo[7];
 
 // Size of this array depends on registered techs
-layout(set = 1, binding = 2) uniform SParticleTechUniBuffer
+layout(set = 1, binding = 3) uniform SParticleTechUniBuffer
 {
     float burn;
     float max_size;
@@ -48,11 +56,18 @@ void CalcFrameCoordInTexAtlas(out vec2 texCoord[4], in vec2 texParam, in float f
     texCoord[3] = vec2(vTexCoords.z, vTexCoords.w);
 }
 
+float CalcColorsYCoord()
+{
+    float one_col_size = (1.0f / float(COLORS_ID));
+    return one_col_size * float(tech_ubo[inTechId[0]].texture_id) + (one_col_size / 2.0);
+}
+
 // Entry Points
 void main()
 {
     // Prepare size variable
-    float size = tech_ubo[inTechId[0]].max_size / 2.0f;
+    float size_alpha = texture(colSampler, vec2(inLife[0], CalcColorsYCoord())).a;
+    float size = (tech_ubo[inTechId[0]].max_size / 2.0f) * size_alpha;
 
     // Prepare used texture id
     int tex_id = tech_ubo[inTechId[0]].texture_id;

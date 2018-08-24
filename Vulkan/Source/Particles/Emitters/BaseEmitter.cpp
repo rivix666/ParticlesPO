@@ -160,7 +160,7 @@ void CBaseEmitter::ReleaseParticles(const std::vector<uint32_t>& index_buff)
 void CBaseEmitter::MakeStepInParticleLife(const uint32_t& cpu_idx)
 {
     auto& data = ParticleMgr()->BuffData();
-    data.Particles[cpu_idx].life -= 0.001f;
+    data.Particles[cpu_idx].life -= 0.5f * g_Engine->LastFrameTime();
 }
 
 void CBaseEmitter::UpdateParticlePos(const uint32_t& cpu_idx, const physx::PxVec3& new_pos)

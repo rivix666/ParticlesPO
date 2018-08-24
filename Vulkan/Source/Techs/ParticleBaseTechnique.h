@@ -5,7 +5,7 @@ struct SParticleTechUniBuffer
 {
     float burn = 1.0f;
     float max_size = 1.0f;
-    int   texture_id = 6; // EParticleTex::COLORS;
+    int   texture_id = 6; // EParticleTex::COLORS; // #PARTICLES zmieniæ na COLOR w bazowej
 };
 
 struct ParticleVertex
@@ -20,7 +20,7 @@ struct ParticleVertex
     static void GetAttributeDescriptions(std::vector<VkVertexInputAttributeDescription>& out_desc);
 };
 
-// #PARTICLES #TECH Dorobiæ mo¿liwoœæ wspó³dzielenia pipelinu przez kilka technik, wtedy bym unkn¹³ problemó z sortowaniem
+// #PARTICLES #TECH Dorobiæ mo¿liwoœæ wspó³dzielenia pipelinu przez kilka technik, wtedy bym unkn¹³ problemów z sortowaniem
 class CParticleBaseTechnique : public ITechnique
 {
 public:

@@ -11,7 +11,7 @@ layout (set = 1, binding = 0) uniform sampler2D texSamplers[TEX_NUM];
 
 // Uniform Buffers
 // Size of this array depends on registered techs
-layout (set = 1, binding = 2) uniform SParticleTechUniBuffer
+layout (set = 1, binding = 3) uniform SParticleTechUniBuffer
 {
     float burn;
     float max_size;
@@ -45,6 +45,12 @@ float CalcSoftParticles(in float depth)
     return clamp(depthDiff * 100.0f, 0.0f, 1.0f); // dzia³a przy mno¿eniu ale czemu? normalnie by³o / fadeFactor (czyli 1.0f)
 }
 
+float CalcColorsYCoord(in int tex_id) // #SHADERS check if it's better to calc this sepparatly in gs i fs, or pass as out variable from gs
+{
+    float one_col_size = (1.0f / float(COLORS_ID));
+    return one_col_size * float(tex_id) + (one_col_size / 2.0);
+}
+
 // Entry Points
 void main()
 {
@@ -53,9 +59,7 @@ void main()
     vec4 col = texture(texSamplers[tex_id], inTexCoord);
 
     // Sample colors gradient for given texture_id
-    float one_col_size = (1.0f / float(COLORS_ID));
-    float g_tex_h = one_col_size * float(tex_id) + (one_col_size / 2.0);
-    vec4 g_col = texture(texSamplers[COLORS_ID], vec2(inLife, g_tex_h));
+    vec4 g_col = texture(texSamplers[COLORS_ID], vec2(inLife, CalcColorsYCoord(tex_id)));
     
     // Color particle
     col.r *= g_col.b;
