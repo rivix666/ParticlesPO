@@ -5,6 +5,8 @@
 #include "Techs/TechniqueManager.h"
 #include "Utils/ImageUtils.h"
 
+//#define USE_INTEL_GPU
+
 CVulkanRenderer::CVulkanRenderer(GLFWwindow* window)
     : m_Window(window)
     , m_DescMgr(new CDescriptorManager())
@@ -961,8 +963,13 @@ int CVulkanRenderer::RateDeviceSuitability(VkPhysicalDevice device)
     int score = 0;
 
     // Discrete GPUs have a significant performance advantage
+#ifdef USE_INTEL_GPU
+    if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+        score += 50000;
+#else
     if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
         score += 1000;
+#endif
 
     // Maximum possible size of textures affects graphics quality
     score += deviceProperties.limits.maxImageDimension2D;
@@ -1023,7 +1030,6 @@ bool CVulkanRenderer::PickPhysicalDevice()
 #ifdef _DEBUG
     LogD("-------------------------------------------------------------\n");
 #endif
-
 
     if (best.second > 0 && FindQueueFamilies(devices[best.first]).IsComplete())
     {
@@ -1194,10 +1200,6 @@ bool CVulkanRenderer::CreateCommandBuffers()
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = (uint32_t)m_CommandBuffers.size();
 
-    // allocInfo.level:
-    // VK_COMMAND_BUFFER_LEVEL_PRIMARY: Can be submitted to a queue for execution, but cannot be called from other command buffers.
-    // VK_COMMAND_BUFFER_LEVEL_SECONDARY : Cannot be submitted directly, but can be called from primary command buffers.
-
     if (VKRESULT(vkAllocateCommandBuffers(m_Device, &allocInfo, m_CommandBuffers.data())))
         return utils::FatalError(g_Engine->Hwnd(), "failed to allocate command buffers!");
 
@@ -1211,6 +1213,12 @@ bool CVulkanRenderer::CreateCommandBuffers()
 
         if (VKRESULT(vkBeginCommandBuffer(m_CommandBuffers[i], &beginInfo)))
             return utils::FatalError(g_Engine->Hwnd(), "Failed to begin recording command buffer");
+
+        // Starting compute //#COMPUTE powinien byæ oddzielny command buffer (wa¿ne!!)
+        if (g_Engine->ParticleMgr())
+        {
+            g_Engine->ParticleMgr()->RecordCommandBufferCompute(m_CommandBuffers[i]);
+        }
 
         // Starting a render pass
         VkRenderPassBeginInfo renderPassInfo = {};

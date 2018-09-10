@@ -66,7 +66,7 @@ void CParticleTextureManager::RegisterBaseTextures()
     REGISTER_P_TEX(Smoke, 8.0f, 8.0f);
     REGISTER_P_TEX(Debris, 3.0f, 3.0f);
     REGISTER_P_TEX(Flare, 1.0f, 1.0f);
-    REGISTER_P_TEX(HaloFlare, 1.0f, 1.0f);
+    REGISTER_P_TEX(HaloFlare, 8.0f, 8.0f);
     REGISTER_P_TEX(RoundSparks, 1.0f, 1.0f);
     REGISTER_P_TEX(COLORS, 1.0f, 8.0f);
 }

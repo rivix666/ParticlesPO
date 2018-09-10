@@ -114,8 +114,11 @@ void CBaseEmitter::CreateParticles(std::vector<uint32_t>& idx_out, std::vector<p
         int px_idx = ReserveSlotInBuffer();
         idx_out.push_back(px_idx);
 
-        float x, y, z;
-        GenerateRandomXYZ(x, y, z);
+        float x = m_Direction.x;
+        float y = m_Direction.y;
+        float z = m_Direction.z;
+        if (m_UseRandomDir)
+            GenerateRandomXYZ(x, y, z);
         dir_out.push_back(physx::PxVec3(x, y, z));
 
         m_UsedParticles++;
@@ -142,10 +145,13 @@ void CBaseEmitter::ReleaseParticles(const std::vector<uint32_t>& index_buff)
                 continue;
             }
 
+            glm::vec3 meh = data.Particles[hole].dummy_vec;
+
             data.Particles[hole] = data.Particles[last];
 
             data.Particles[last].life = -1;
             data.Particles[last].pos = glm::vec3(0.0f, -1.0f, 0.0f);
+            data.Particles[last].dummy_vec = glm::vec3(-1.0f, meh.y, 666.0f); //#COMPUTE
 
             data.CPU2Px[hole] = data.CPU2Px[last];
 
@@ -183,7 +189,8 @@ const uint32_t& CBaseEmitter::ReserveSlotInBuffer()
     data.CPU2Px[cpu_idx].EmitId = m_EmitterId;
 
     data.Particles[cpu_idx].life = RESET_LIFE;
-    data.Particles[cpu_idx].tech_id = m_TechId;
+    data.Particles[cpu_idx].tech_id = (float)m_TechId;
+    data.Particles[cpu_idx].dummy_vec = glm::vec3(0.0f, data.Particles[cpu_idx].dummy_vec.y, 666.0f); //#COMPUTE
 
     return px_idx;
 }
@@ -217,7 +224,7 @@ uint32_t CBaseEmitter::LowestBitSet(uint32_t x)
 
 void CBaseEmitter::GenerateRandomXYZ(float& x, float& y, float& z)
 {
-    x = (m_Direction.x + float(rand() % 5000 - 2500) / float(-200)) * (float)(rand() % 100);
-    y = (m_Direction.y + float(rand() % 5000 - 2500) / float(-200)) * (float)(rand() % 100);
-    z = (m_Direction.z + float(rand() % 5000 - 2500) / float(-200)) * (float)(rand() % 100);
+    x = (m_Direction.x + (float(rand() % 5000 - 2500) / float(-200)) * m_RandomDirStrength) * (float)(rand() % 100);
+    y = (m_Direction.y + (float(rand() % 5000 - 2500) / float(-200)) * m_RandomDirStrength) * (float)(rand() % 100);
+    z = (m_Direction.z + (float(rand() % 5000 - 2500) / float(-200)) * m_RandomDirStrength) * (float)(rand() % 100);
 }

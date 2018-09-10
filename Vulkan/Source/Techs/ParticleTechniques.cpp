@@ -31,8 +31,8 @@ CParticleDebrisTechnique::CParticleDebrisTechnique(ITechnique* parent)
 CParticleFlareTechnique::CParticleFlareTechnique(ITechnique* parent)
     : CParticleBaseTechnique(parent)
 {
-    m_UniBuffData.burn = 0.8f;
-    m_UniBuffData.max_size = 1.0f;
+    m_UniBuffData.burn = 1.0f;
+    m_UniBuffData.max_size = 0.1f;
     m_UniBuffData.texture_id = EParticleTex::Flare;
 }
 

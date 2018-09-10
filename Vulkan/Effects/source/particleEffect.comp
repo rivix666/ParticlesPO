@@ -1,27 +1,227 @@
 #version 450
 #extension GL_KHR_vulkan_glsl : enable
 
-layout( local_size_x = 32, local_size_y = 32 ) in;
+// Const
+const uint PARTICLES_COUNT = 24576;
+const uint THREAD_X = 32;
 
-layout( set = 4, binding = 0, rgba32f ) uniform imageBuffer StorageTexelBuffer;
-
-layout( push_constant ) uniform TimeState 
+// Uniform Buffers
+layout (set = 0, binding = 0) uniform SCamUniBuffer
 {
-    float DeltaTime;
-} PushConstant;
+    mat4 view;
+    mat4 proj;
+} cam_ubo;
 
-const uint PARTICLES_COUNT = 2000;
+// Push Constant
+layout(push_constant) uniform pcParticles
+{
+    vec4 cnpc; // vec3 - camNormPos, float - particles count
+    uint level;
+    uint level_mask;
+} pc;
+
+// Input Texel Buffer
+layout(local_size_x = THREAD_X) in;
+layout(set = 1, binding = 0, rgba32f) uniform imageBuffer storageTexelBuffer;
+
+//#define _DEBUG
+
+#ifdef _DEBUG
+// Output Debug Buffer
+layout(set = 1, binding = 1, rgba32f) uniform imageBuffer debugTexelBuffer;
+#endif
+
+vec4 GetPos(in uint x)
+{
+    return imageLoad(storageTexelBuffer, int(x * 2));
+}
+
+vec4 GetTech(in uint x)
+{
+    return imageLoad(storageTexelBuffer, int(x * 2 + 1));
+}
+
+void SetPos(in uint x, in vec4 pos)
+{
+#ifdef _DEBUG
+    imageStore(debugTexelBuffer, int(x * 2), pos);
+#else
+    imageStore(storageTexelBuffer, int(x * 2), pos);
+#endif
+}
+
+void SetTech(in uint x, in vec4 tech)
+{
+#ifdef _DEBUG
+    imageStore(debugTexelBuffer, int(x * 2 + 1), tech);
+#else
+    imageStore(storageTexelBuffer, int(x * 2 + 1), tech);
+#endif
+}
+
+void Sort()
+{
+    uint p_count = uint(pc.cnpc.w);
+    vec3 cam_norm_pos = pc.cnpc.xyz;
+    for (uint i = 2; i <= p_count; i <<= 1)
+    {
+        for (uint j = i >> 1; j > 0; j >>= 1)
+        {
+            for (uint k = /*gl_WorkGroupID*/gl_GlobalInvocationID.x; k < p_count >> 1; k += THREAD_X)
+            {
+                uint l = k / j * j + k;
+                
+                //if (l + j < p_count)
+                //{
+                    vec4 l_pos = GetPos(l);
+                    vec4 l_tech = GetTech(l);
+                    vec4 r_pos = GetPos(l + j);
+                    vec4 r_tech = GetTech(l + j);
+
+                    if (l_tech.y == -1.0f || r_tech.y == -1.0f)
+                        continue;
+           
+                    float left = dot(cam_norm_pos, l_pos.xyz);
+                    float right = dot(cam_norm_pos, r_pos.xyz);
+                    
+                    if ((k & (i >> 1)) != 0)
+                    {
+                        // descending order
+                        if (left < right)
+                        {
+                            SetPos(l, r_pos);
+                            SetTech(l, r_tech);
+                            SetPos(l + j, l_pos);
+                            SetTech(l + j, l_tech);
+                        }
+                    }
+                    else
+                    {
+                        // ascending order
+                        if (left > right)
+                        {
+                            SetPos(l, r_pos);
+                            SetTech(l, r_tech);
+                            SetPos(l + j, l_pos);
+                            SetTech(l + j, l_tech);
+                        }
+                    }
+                //}
+            }   
+            memoryBarrierImage();
+            barrier();
+        }
+    }
+}
+
+void DebugSort()
+{
+    uint p_count = uint(pc.cnpc.w);
+    vec3 cam_norm_pos = pc.cnpc.xyz;
+    for (uint i = 2; i <= p_count; i <<= 1)
+    {
+        for (uint j = i >> 1; j > 0; j >>= 1)
+        {
+            for (uint k = /*gl_WorkGroupID*/gl_LocalInvocationIndex.x; k < p_count >> 1; k += THREAD_X)
+            {
+                uint l = k / j * j + k;
+                
+                //if (l + j < p_count)
+                //{
+                    vec4 l_pos = GetPos(l);
+                    vec4 l_tech = GetTech(l);
+                    vec4 r_pos = GetPos(l + j);
+                    vec4 r_tech = GetTech(l + j);
+
+                    if (l_tech.y == -1.0f || r_tech.y == -1.0f)
+                        continue;
+           
+                    float left = l_tech.y;
+                    float right = r_tech.y;
+                    
+                    if ((k & (i >> 1)) != 0)
+                    {
+                        // descending order
+                        if (left < right)
+                        {
+                            SetPos(l, r_pos);
+                            SetTech(l, r_tech);
+                            SetPos(l + j, l_pos);
+                            SetTech(l + j, l_tech);
+                        }
+                    }
+                    else
+                    {
+                        // ascending order
+                        if (left > right)
+                        {
+                            SetPos(l, r_pos);
+                            SetTech(l, r_tech);
+                            SetPos(l + j, l_pos);
+                            SetTech(l + j, l_tech);
+                        }
+                    }
+                //}
+            }   
+            memoryBarrierImage();
+            barrier();
+        }
+    }
+}
+
+shared vec4 shared_pos[THREAD_X];
+shared vec4 shared_tech[THREAD_X];
+//void BitonicSort( uint3 Gid : SV_GroupID, 
+//                  uint3 DTid : SV_DispatchThreadID, 
+//                  uint3 GTid : SV_GroupThreadID, 
+//                  uint GI : SV_GroupIndex )
+
+void DxSort()
+{
+    // Load shared data
+    shared_pos[gl_LocalInvocationIndex.x] = GetPos(gl_GlobalInvocationID.x);
+    shared_tech[gl_LocalInvocationIndex.x] = GetTech(gl_GlobalInvocationID.x);
+    memoryBarrierShared();
+    
+    // Sort the shared data
+    // >> less
+    for (uint j = pc.level >> 1 ; j > 0 ; j >>= 1)
+    {
+        bool b0 = shared_tech[gl_LocalInvocationIndex.x & ~j].y <= shared_tech[gl_LocalInvocationIndex.x | j].y;
+        bool b1 = (pc.level_mask & gl_GlobalInvocationID.x) != 0;
+        float result = (b0 == b1) ? shared_tech[gl_LocalInvocationIndex.x ^ j].y : shared_tech[gl_LocalInvocationIndex.x].y;
+        barrier();
+        shared_tech[gl_LocalInvocationIndex.x].y = result;
+        shared_tech[gl_LocalInvocationIndex.x].z = pc.level;
+        shared_tech[gl_LocalInvocationIndex.x].w = pc.level;
+        memoryBarrierShared();
+    }
+    
+    // Store shared data
+    SetTech(gl_GlobalInvocationID.x, shared_tech[gl_LocalInvocationIndex.x]);
+}
 
 void main() 
 {
-  //if( gl_GlobalInvocationID.x < PARTICLES_COUNT ) {
-  //  vec4 position = imageLoad( StorageTexelBuffer, int(gl_GlobalInvocationID.x * 2) );
-  //  vec4 color = imageLoad( StorageTexelBuffer, int(gl_GlobalInvocationID.x * 2 + 1) );
-  //
-  //  vec3 speed = normalize( cross( vec3( 0.0, 1.0, 0.0 ), position.xyz ) ) * color.w;
-  //  
-  //  position.xyz += speed * PushConstant.DeltaTime;
-  //  
-  //  imageStore( StorageTexelBuffer, int(gl_GlobalInvocationID.x * 2), position );
-  //}
+    if(gl_GlobalInvocationID.x < /*PARTICLES_COUNT*/ 
+    uint(pc.cnpc.w)) 
+    {
+        //Sort();
+        DxSort();
+    }
+
+    //if(gl_GlobalInvocationID.x < PARTICLES_COUNT) 
+    //{
+    //    vec4 pos_life = imageLoad(storageTexelBuffer, int(gl_GlobalInvocationID.x * 2));
+    //    vec4 tech_dummy = imageLoad(storageTexelBuffer, int(gl_GlobalInvocationID.x * 2 + 1));
+    //
+    //    //tech_dummy.y = gl_GlobalInvocationID.x;
+    //    //tech_dummy.z = gl_LocalInvocationID.x;
+    //    //tech_dummy.w = gl_WorkGroupID.x;
+    //
+    //    #ifdef _DEBUG
+    //    imageStore(debugTexelBuffer, int(gl_GlobalInvocationID.x * 2), pos_life);
+    //    imageStore(debugTexelBuffer, int(gl_GlobalInvocationID.x * 2 + 1), tech_dummy);
+    //    #endif
+    //}
 }

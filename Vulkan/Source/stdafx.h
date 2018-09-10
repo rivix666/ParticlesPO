@@ -30,6 +30,8 @@
 // Need to be under GLFW includes
 #include <windows.h>
 
+#include "misc/half.hpp"
+
 // Internal includes
 #include "Engine.h"
 #include "Utils/Timer.h"

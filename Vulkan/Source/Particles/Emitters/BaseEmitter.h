@@ -28,8 +28,12 @@ public:
 
     void SetPos(const glm::vec3& pos) { m_Pos = pos; }
     void SetDirection(const glm::vec3& dir) { m_Direction = dir; }
+    void SetRandDirStr(const float& str) { m_RandomDirStrength = str; }
     void SetEmitterId(const uint32_t& id) { m_EmitterId = id; }
     void UseParticleDrain(bool use = true) { m_UseParticleDrain = use; }
+    void UseRandomDir(bool use = true) { m_UseRandomDir = use; }
+
+    physx::PxParticleSystem* ParticleSystem() const { return m_PxParticles; }
 
     CParticleManager* ParticleMgr();
 
@@ -64,6 +68,9 @@ protected:
     glm::vec3                   m_Direction = glm::vec3(0.0f, 0.0f, 0.0f);
     uint32_t                    m_EmitterId = UINT32_MAX;
     uint32_t                    m_BuffSize = 0;
+
+    float                       m_RandomDirStrength = 1.0f;
+    bool                        m_UseRandomDir = true;
 
     // PhysX
     bool                        m_UseParticleDrain = true;

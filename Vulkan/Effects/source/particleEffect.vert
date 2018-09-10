@@ -11,7 +11,7 @@ layout (set = 0, binding = 0) uniform       SCamUniBuffer
 // Input
 layout (location = 0) in vec3               inPosition;
 layout (location = 1) in float              inLife;
-layout (location = 2) in int                inTechId;
+layout (location = 2) in float              inTechId;
 
 // Output
 layout (location = 0) out float             outLife;
@@ -22,5 +22,5 @@ void main()
 {
     gl_Position = cam_ubo.view * vec4(inPosition, 1.0f);
     outLife = inLife;
-    outTechId = inTechId;
+    outTechId = int(inTechId);
 }

@@ -55,8 +55,12 @@ namespace utils
         // Particles Info
         ws += L" - Num of particles: ";
         ws += std::to_wstring(g_Engine->ParticleMgr()->BuffData().CPUFree);
+
         ws += L" | Sorted on: ";
-        //ws += g_Engine->m_SortOnGPU ? L"GPU" : L"CPU";
+        if (g_Engine->ParticleMgr()->SortMethod() == CParticleManager::ESortType::NONE)
+            ws += L"NONE";
+        else
+            ws += g_Engine->ParticleMgr()->SortMethod() == CParticleManager::ESortType::GPU ? L"GPU" : L"CPU";
 
         // Fps/Spf
         double spf = CalcSPF();

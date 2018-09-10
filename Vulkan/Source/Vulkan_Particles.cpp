@@ -52,24 +52,27 @@ void RegisterBaseObjects()
 void RegisterEmitters()
 {
     auto tmp = new CBaseEmitter(2, 1000);
-    REGISTER_EMITTER(tmp, -1);
+    tmp->ParticleSystem()->setActorFlag(physx::PxActorFlag::eDISABLE_GRAVITY, true);
+    tmp->ParticleSystem()->setDamping(0.3f);
     tmp->SetPos(glm::vec3(-8.0f, 6.0f, 0.0f));
+    tmp->SetDirection(glm::vec3(0.0f, 25.0f, 0.0f));
+    REGISTER_EMITTER(tmp, -1);
 
     tmp = new CBaseEmitter(3, 1000);
-    REGISTER_EMITTER(tmp, -1);
     tmp->SetPos(glm::vec3(-4.0f, 6.0f, 0.0f));
+    REGISTER_EMITTER(tmp, -1);
 
     tmp = new CBaseEmitter(4, 1000);
-    REGISTER_EMITTER(tmp, -1);
     tmp->SetPos(glm::vec3(0.0f, 6.0f, 0.0f));
+    REGISTER_EMITTER(tmp, -1);
 
     tmp = new CBaseEmitter(5, 1000);
-    REGISTER_EMITTER(tmp, -1);
     tmp->SetPos(glm::vec3(4.0f, 6.0f, 0.0f));
+    REGISTER_EMITTER(tmp, -1);
 
     tmp = new CBaseEmitter(6, 1000);
-    REGISTER_EMITTER(tmp, -1);
     tmp->SetPos(glm::vec3(8.0f, 6.0f, 0.0f));
+    REGISTER_EMITTER(tmp, -1);
 }
 
 // Shutdown

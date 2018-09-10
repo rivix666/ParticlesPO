@@ -171,6 +171,65 @@ void CEngine::Frame()
     // Render
     m_Renderer->PresentQueueWaitIdle();
     m_Renderer->Render();
+
+    //////////////////////////////////////////////////////////////////////////
+    if (ParticleMgr()->BuffData().CPUFree > 0)
+    {
+        // Create staging buffer
+        VkDeviceSize bufferSize = ParticleMgr()->BuffData().CPUFree * sizeof(ParticleVertex);
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        g_Engine->Renderer()->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        g_Engine->Renderer()->CopyBuffer(ParticleMgr()->m_VertexBuffer, stagingBuffer, bufferSize);
+
+        // Map staging buffer
+        void* data;
+        vkMapMemory(g_Engine->Device(), stagingBufferMemory, 0, bufferSize, 0, &data);
+
+        // original buff
+        //////////////////////////////////////////////////////////////////////////
+        ParticleVertex* data2 = new ParticleVertex[ParticleMgr()->BuffData().CPUFree];
+        memcpy(data2, data, (size_t)bufferSize);
+        
+        // DEBUG #COMPUTE
+        for (uint32_t i = 0; i < ParticleMgr()->BuffData().CPUFree; i++)
+        {
+            auto& vec = data2[i].dummy_vec;
+            LogD(" | ");
+            LogD(vec.y);
+        }
+        LogD("\n");
+
+        //////////////////////////////////////////////////////////////////////////
+
+        // debug buff
+        //////////////////////////////////////////////////////////////////////////
+#ifdef _DEBUG
+        //CParticleSortCmpTechnique* tech = static_cast<CParticleSortCmpTechnique*>(TechMgr()->GetTechnique(6));
+        //void* data2;// = new ParticleVertex[ParticleMgr()->BuffData().CPUFree];
+        //vkMapMemory(g_Engine->Device(), tech->m_DebugBufferMemory, 0, bufferSize, 0, &data2);
+        //
+        //ParticleVertex* meh_data = static_cast<ParticleVertex*>(data2);
+        //for (uint32_t i = 0; i < ParticleMgr()->BuffData().CPUFree; i++)
+        //{
+        //    auto& vec = meh_data[i].dummy_vec;
+        //    LogD(" | ");
+        //    LogD(vec.y);
+        //}
+        //LogD("\n");
+        //
+        //vkUnmapMemory(g_Engine->Device(), tech->m_DebugBufferMemory);
+#endif
+        //////////////////////////////////////////////////////////////////////////
+
+
+        // Unmap staging buffer and copy its data into vertex buffer
+        vkUnmapMemory(g_Engine->Device(), stagingBufferMemory);
+
+        // Destroy staging buffer
+        vkDestroyBuffer(g_Engine->Device(), stagingBuffer, nullptr);
+        vkFreeMemory(g_Engine->Device(), stagingBufferMemory, nullptr);
+    }
 }
 
 void CEngine::UpdateScene()

@@ -43,13 +43,18 @@ bool CBaseComputeTechnique::CreatePipeline()
     return true;
 }
 
-void CBaseComputeTechnique::GetPipelineLayoutDesc(VkPipelineLayoutCreateInfo& pipelineLayoutInfo)
+void CBaseComputeTechnique::GetPipelineLayoutDesc(VkPipelineLayoutCreateInfo& pipelineLayoutInfo) // #TECH to nei powinno tu byc tylko poziom wyzej
 {
     static std::vector<VkDescriptorSetLayout> lays = { 
         g_Engine->DescMgr()->DescriptorSetLayout((uint32_t)EDescSetRole::GENERAL),
         g_Engine->DescMgr()->DescriptorSetLayout((uint32_t)EDescSetRole::COMPUTE)
     };
+    static std::vector<VkPushConstantRange> p_const = { 
+        { VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(glm::vec4) + sizeof(uint32_t) + sizeof(uint32_t) },
+    };
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = (uint32_t)lays.size();
     pipelineLayoutInfo.pSetLayouts = lays.data();
+    pipelineLayoutInfo.pPushConstantRanges = p_const.data();
+    pipelineLayoutInfo.pushConstantRangeCount = p_const.size();
 }

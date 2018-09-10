@@ -12,6 +12,7 @@ SParticleBufferData::SParticleBufferData()
     {
         PxPool.push_back(PARTICLE_BUFF_SIZE - i - 1);
         Particles[i].pos = glm::vec3(0.0f, -1.0f, 0.0f);
+        Particles[i].dummy_vec = glm::vec3(-1.0f, i, 0.0f);
     }
 }
 
@@ -26,7 +27,7 @@ bool CParticleManager::Init()
     // Create Vertex Buffer
     g_Engine->Renderer()->CreateBuffer(
         PARTICLE_VERTEX_BUFF_SIZE,
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT, 
+        /*#COMPUTE*/VK_BUFFER_USAGE_TRANSFER_SRC_BIT |/**/ VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
         m_VertexBuffer, 
         m_VertexBufferMemory);
@@ -82,7 +83,7 @@ void CParticleManager::UpdateBuffers()
         return;
 
     // Create staging buffer
-    VkDeviceSize bufferSize = m_PartData.CPUFree * sizeof(ParticleVertex);
+    VkDeviceSize bufferSize = /*m_PartData.CPUFree*/ PARTICLE_BUFF_SIZE * sizeof(ParticleVertex); //#COMPUTE
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
     g_Engine->Renderer()->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
@@ -107,32 +108,13 @@ void CParticleManager::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
         return;
 
     auto tech_mgr = g_Engine->TechMgr();
-
-    // Compute Pipeline
-    //////////////////////////////////////////////////////////////////////////
-//     auto c_tech = tech_mgr->GetTechnique(6);
-// 
-//     // Bind Pipeline
-//     vkCmdBindPipeline(cmd_buff, VK_PIPELINE_BIND_POINT_COMPUTE, c_tech->GetPipeline());
-// 
-//     // Bind Descriptor Sets
-     std::vector<VkDescriptorSet> desc_sets;// = {
-//         g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::GENERAL),
-//         g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::COMPUTE)
-//     };
-//     vkCmdBindDescriptorSets(cmd_buff, VK_PIPELINE_BIND_POINT_COMPUTE, c_tech->GetPipelineLayout(), 0, (uint32_t)desc_sets.size(), desc_sets.data(), 0, nullptr);
-//     
-//     vkCmdDispatch(cmd_buff, PARTICLE_BUFF_SIZE / 32 + 1, 1, 1);
-
-    // Graphics Pipeline
-    //////////////////////////////////////////////////////////////////////////
     auto g_tech = tech_mgr->GetTechnique(1); //#PARTICLES TMP!!
 
     // Bind Pipeline
     vkCmdBindPipeline(cmd_buff, VK_PIPELINE_BIND_POINT_GRAPHICS, g_tech->GetPipeline());
 
     // Bind Descriptor Sets
-    desc_sets = {
+    std::vector<VkDescriptorSet> desc_sets = {
         g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::GENERAL),
         g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::PARTICLES),
         g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::DEPTH)
@@ -144,6 +126,72 @@ void CParticleManager::RecordCommandBuffer(VkCommandBuffer& cmd_buff)
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(cmd_buff, 0, 1, vertexBuffers, offsets);
     vkCmdDraw(cmd_buff, m_PartData.CPUFree, 1, 0, 0);
+}
+
+void CParticleManager::RecordCommandBufferCompute(VkCommandBuffer& cmd_buff)
+{
+    if (m_SortMethod != ESortType::GPU)
+        return;
+
+    if (m_PartData.CPUFree < 1)
+        return;
+
+    auto tech_mgr = g_Engine->TechMgr();
+    auto c_tech = tech_mgr->GetTechnique(6);
+
+    // Bind Pipeline
+    vkCmdBindPipeline(cmd_buff, VK_PIPELINE_BIND_POINT_COMPUTE, c_tech->GetPipeline());
+
+    // Bind Descriptor Sets
+    std::vector<VkDescriptorSet> desc_sets = {
+        g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::GENERAL),
+        g_Engine->DescMgr()->DescriptorSet((uint32_t)EDescSetRole::COMPUTE)
+    };
+    vkCmdBindDescriptorSets(cmd_buff, VK_PIPELINE_BIND_POINT_COMPUTE, c_tech->GetPipelineLayout(), 0, (uint32_t)desc_sets.size(), desc_sets.data(), 0, nullptr);
+
+    //////////////////////////////////////////////////////////////////////////
+    uint32_t elem_num =  /*PARTICLE_BUFF_SIZE*/ m_PartData.CPUFree;
+    uint32_t thread_x = 32;
+    //////////////////////////////////////////////////////////////////////////
+
+    // Push constants
+    glm::vec4 pc = glm::vec4(glm::normalize(g_Engine->Camera()->CameraPosition()), m_PartData.CPUFree);
+    size_t data_size = sizeof(glm::vec4) + sizeof(uint32_t) + sizeof(uint32_t);
+    char* data = new char[data_size];
+    memcpy(data, &pc, sizeof(glm::vec4));
+    for (uint32_t level = 2; level <= 32; level = level * 2)
+    {
+        // Push constants //#COMPUTE test dx tylko jak neiz adziala to pc poza petla
+        memcpy(data + sizeof(glm::vec4), &level, sizeof(uint32_t));
+        memcpy(data + sizeof(glm::vec4) + sizeof(uint32_t), &level, sizeof(uint32_t));
+        vkCmdPushConstants(cmd_buff, c_tech->GetPipelineLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, data_size, data);
+        vkCmdDispatch(cmd_buff, elem_num / thread_x, 1, 1);//#COMPUTE
+    }
+
+    //for (uint32_t level = (32 * 2); level <= elem_num; level = level * 2)
+    //{
+    //    uint32_t pc_level = (level / thread_x);
+    //    uint32_t pc_level_mask = (level & ~elem_num) / thread_x;
+    //
+    //    // Push constants //#COMPUTE test dx tylko jak neiz adziala to pc poza petla
+    //    memcpy(data + sizeof(glm::vec4), &pc_level, sizeof(uint32_t));
+    //    memcpy(data + sizeof(glm::vec4) + sizeof(uint32_t), &pc_level_mask, sizeof(uint32_t));
+    //
+    //    // Sort the transposed column data
+    //    vkCmdDispatch(cmd_buff, elem_num / thread_x, 1, 1);
+    //
+    //    // Push constants //#COMPUTE test dx tylko jak neiz adziala to pc poza petla
+    //    memcpy(data + sizeof(glm::vec4), &thread_x, sizeof(uint32_t));
+    //    memcpy(data + sizeof(glm::vec4) + sizeof(uint32_t), &level, sizeof(uint32_t));
+    //
+    //    // Sort the row data
+    //    vkCmdDispatch(cmd_buff, elem_num / thread_x, 1, 1);
+    //}
+
+
+    delete data;
+    
+    //vkCmdDispatch(cmd_buff, m_PartData.CPUFree / 32 + 1, 1, 1);
 }
 
 void CParticleManager::EmitParticles(const uint32_t& idx, const uint32_t& count, const double& in_time /*= 0.0*/)

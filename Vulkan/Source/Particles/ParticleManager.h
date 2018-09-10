@@ -43,6 +43,7 @@ public:
 
     // Command buffer handle
     void RecordCommandBuffer(VkCommandBuffer& cmd_buff);
+    void RecordCommandBufferCompute(VkCommandBuffer& cmd_buff);
 
     // Emitters
     void EmitParticles(const uint32_t& idx, const uint32_t& count, const double& in_time = 0.0);
@@ -63,6 +64,17 @@ public:
 
     VkBuffer VertexBuffer() const { return m_VertexBuffer; }
     VkDeviceMemory VertexBufferMemory() const { return m_VertexBufferMemory; }
+
+    // Sorting
+    enum class ESortType
+    {
+        CPU = 0,
+        GPU,
+        NONE
+    };
+
+    void SetSortMethod(ESortType type) { m_SortMethod = type; }
+    ESortType SortMethod() const { return m_SortMethod; }
 
     // Uni Buffers
     bool CreateUniBuffers();
@@ -109,6 +121,9 @@ private:
     TTechEmiVec             m_Tech2Emi;
     std::set<SLongEmit*>    m_LongEmitted;
 
+    ESortType               m_SortMethod = ESortType::GPU;
+
+public: //#COMPUTE
     // Buffers
     VkBuffer                m_VertexBuffer = nullptr;
     VkDeviceMemory          m_VertexBufferMemory = nullptr;

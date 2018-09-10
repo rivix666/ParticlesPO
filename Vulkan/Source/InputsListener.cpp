@@ -38,7 +38,7 @@ void input::HandlePress(GLFWwindow* window, const int& key, const int& scancode,
 
     switch (key)
     {
-    // Camera control
+        // Camera control
     case GLFW_KEY_W:
     {
         g_Engine->Camera()->MoveFreeCam(ECamMoveDir::FORWARD, true);
@@ -103,12 +103,32 @@ void input::HandlePress(GLFWwindow* window, const int& key, const int& scancode,
     }
     case GLFW_KEY_5:
     {
-        TryToActivateEmitter(4, 1);
+        TryToActivateEmitter(4, 2);
         break;
     }
     case GLFW_KEY_0:
     {
         g_Engine->ParticleMgr()->DeactivateAllEmitters();
+        break;
+    }
+
+    // Sort
+    case GLFW_KEY_F1:
+    {
+        g_Engine->ParticleMgr()->SetSortMethod(CParticleManager::ESortType::GPU);
+        g_Engine->Renderer()->RecreateCommandBuffer();
+        break;
+    }
+    case GLFW_KEY_F2:
+    {
+        g_Engine->ParticleMgr()->SetSortMethod(CParticleManager::ESortType::CPU);
+        g_Engine->Renderer()->RecreateCommandBuffer();
+        break;
+    }
+    case GLFW_KEY_F3:
+    {
+        g_Engine->ParticleMgr()->SetSortMethod(CParticleManager::ESortType::NONE);
+        g_Engine->Renderer()->RecreateCommandBuffer();
         break;
     }
 

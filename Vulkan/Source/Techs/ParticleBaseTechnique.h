@@ -14,7 +14,9 @@ struct ParticleVertex
 
     glm::vec3   pos = glm::vec3(0.0f, 0.0f, 0.0f);
     float       life = 0.0f;
-    int         tech_id = 0;
+    float       tech_id = 0;
+
+    glm::vec3   dummy_vec = glm::vec3(-1.0f, 0.0f, 666.0f);
 
     static void GetBindingDescription(VkVertexInputBindingDescription& out_desc);
     static void GetAttributeDescriptions(std::vector<VkVertexInputAttributeDescription>& out_desc);

@@ -30,11 +30,16 @@ void ParticleVertex::GetAttributeDescriptions(std::vector<VkVertexInputAttribute
 
     // TechId
     VkVertexInputAttributeDescription tech_id_desc = {};
-    life_desc.binding = 0;
-    life_desc.location = 2;
-    life_desc.format = VK_FORMAT_R32_SINT;
-    life_desc.offset = offsetof(ParticleVertex, tech_id);
-    out_desc.push_back(life_desc);
+    tech_id_desc.binding = 0;
+    tech_id_desc.location = 2;
+    tech_id_desc.format = VK_FORMAT_R32_SFLOAT;
+    tech_id_desc.offset = offsetof(ParticleVertex, tech_id);
+    out_desc.push_back(tech_id_desc);
+
+    // DummyVec
+    pos_desc.location = 3;
+    pos_desc.offset = offsetof(ParticleVertex, dummy_vec);
+    out_desc.push_back(pos_desc);
 }
 
 //////////////////////////////////////////////////////////////////////////
